@@ -127,6 +127,7 @@ tr:last-child td{border-bottom:none}
     <h1 id="pageTitle">דשבורד ראשי</h1>
     <div style="display:flex;gap:8px">
       <button class="btn" onclick="exportCSV()">ייצא CSV</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑️ מחק הכל</button>
       <button class="btn btn-primary" onclick="loadFromFirebase()">🔄 רענן</button>
     </div>
   </div>
@@ -359,7 +360,10 @@ function buildTableHTML(list) {
     html += '<td><span class="score-num '+li.scls+'">'+sc+'</span></td>';
     html += '<td><span class="badge '+li.cls+'">'+li.label+'</span></td>';
     html += '<td><span class="status-badge s-'+st+'">'+statusLabel(st)+'</span></td>';
-    html += '<td><button class="act-btn" onclick="openDetail(\''+s.ref+'\')">📋 צפה / דרג</button></td>';
+    html += '<td style="white-space:nowrap">';
+    html += '<button class="act-btn" onclick="openDetail(\''+s.ref+'\')">📋 צפה / דרג</button>';
+    html += ' <button class="act-btn" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelete(\''+s.ref+'\',\''+encodeURIComponent(s.evname||'')+'\')">🗑️ מחק</button>';
+    html += '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -502,6 +506,116 @@ function exportCSV() {
   var a = document.createElement('a'); a.href=url; a.download='security_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
   URL.revokeObjectURL(url);
 }
+
+/* =========================================================
+   🗑️ מחיקת בקשות מ-Firebase
+   ========================================================= */
+
+function deleteFromFirebase(ref) {
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
+    // מחק מ-localStorage
+    var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
+    raw = raw.filter(function(s){ return s.ref !== ref; });
+    localStorage.setItem('securitySubmissions', JSON.stringify(raw));
+    return Promise.resolve();
+  }
+  return fetch(FIREBASE_URL + '/submissions/' + ref + '.json', {
+    method: 'DELETE'
+  }).then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  });
+}
+
+function confirmDelete(ref, evnameEncoded) {
+  var evname = decodeURIComponent(evnameEncoded);
+  document.getElementById('deleteRef').textContent = ref;
+  document.getElementById('deleteEvname').textContent = evname;
+  document.getElementById('deleteModal').classList.add('show');
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+    executeDelete(ref);
+  };
+}
+
+function executeDelete(ref) {
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.textContent = 'מוחק...';
+  btn.disabled = true;
+
+  deleteFromFirebase(ref)
+    .then(function() {
+      // הסר מהמערך המקומי
+      allSubmissions = allSubmissions.filter(function(s){ return s.ref !== ref; });
+      closeDeleteModal();
+      showView(currentView);
+      // Toast הצלחה
+      var toast = document.createElement('div');
+      toast.textContent = '🗑️ הבקשה נמחקה';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#dc2626;color:white;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;font-family:Heebo,sans-serif';
+      document.body.appendChild(toast);
+      setTimeout(function(){ toast.remove(); }, 2500);
+    })
+    .catch(function(err) {
+      closeDeleteModal();
+      alert('שגיאה במחיקה: ' + err.message);
+    });
+}
+
+function confirmDeleteAll() {
+  if (!confirm('⚠️ האם אתה בטוח שברצונך למחוק את כל ההגשות? פעולה זו בלתי הפיכה!')) return;
+  if (!confirm('אישור אחרון — מחק הכל?')) return;
+
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
+    localStorage.removeItem('securitySubmissions');
+    allSubmissions = [];
+    showView(currentView);
+    return;
+  }
+
+  fetch(FIREBASE_URL + '/submissions.json', { method: 'DELETE' })
+    .then(function() {
+      allSubmissions = [];
+      showView(currentView);
+    })
+    .catch(function(err) { alert('שגיאה: ' + err.message); });
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.textContent = '🗑️ כן, מחק לצמיתות';
+  btn.disabled = false;
+}
+
 </script>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-bg" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head" style="background:#fff5f5">
+      <h3 style="color:#dc2626">🗑️ מחיקת בקשה</h3>
+      <button class="close-btn" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:2rem">
+      <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:8px">האם אתה בטוח?</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6">
+        עומד למחוק את הבקשה:<br>
+        <strong id="deleteEvname" style="color:#1e293b"></strong><br>
+        <span style="font-family:monospace;font-size:11px;color:#94a3b8" id="deleteRef"></span>
+      </div>
+      <div style="background:#fee2e2;border-radius:8px;padding:10px 14px;font-size:12px;color:#991b1b;margin-bottom:20px">
+        ⚠️ פעולה זו בלתי הפיכה — הנתונים יימחקו לצמיתות מ-Firebase
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn" onclick="closeDeleteModal()" style="padding:9px 22px">ביטול</button>
+        <button id="confirmDeleteBtn" style="padding:9px 22px;background:#dc2626;color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Heebo',sans-serif">
+          🗑️ כן, מחק לצמיתות
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
