@@ -99,12 +99,9 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 
-<!-- ============================================================
-  🔥 Firebase — שנה לכתובת הפרויקט שלך (אותה כתובת כמו בטופס!)
-  ============================================================ -->
 <script>
   var FIREBASE_URL = 'https://security-event-check-default-rtdb.europe-west1.firebasedatabase.app';
-  var POLLING_INTERVAL = 15000; // רענון אוטומטי כל 15 שניות
+  var POLLING_INTERVAL = 15000;
 </script>
 
 <div class="sidebar">
@@ -136,458 +133,17 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- DETAIL MODAL -->
 <div class="modal-bg" id="modalBg" onclick="closeModal(event)">
   <div class="modal">
-    <div class="modal-head"><h3 id="modalTitle">פרטי הגשה</h3><button class="close-btn" onclick="closeModalDirect()">✕</button></div>
+    <div class="modal-head">
+      <h3 id="modalTitle">פרטי הגשה</h3>
+      <button class="close-btn" onclick="closeModalDirect()">✕</button>
+    </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-foot" id="modalFoot"></div>
   </div>
 </div>
-
-<script>
-/* =========================================================
-   🔥 FIREBASE REST API — קריאה וכתיבה
-   ========================================================= */
-
-var allSubmissions = [];
-var currentView = 'dashboard';
-var pollingTimer = null;
-
-// בדיקת חיבור וטעינה ראשונה
-window.addEventListener('DOMContentLoaded', function() {
-  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    document.getElementById('fbDot').className = 'fb-dot';
-    document.getElementById('fbStatus').textContent = 'Firebase לא מוגדר';
-    loadFromLocalStorage();
-    return;
-  }
-  loadFromFirebase();
-  // רענון אוטומטי בזמן אמת
-  pollingTimer = setInterval(function() {
-    loadFromFirebase(true); // silent reload
-  }, POLLING_INTERVAL);
-});
-
-// טעינה מ-Firebase
-function loadFromFirebase(silent) {
-  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    loadFromLocalStorage();
-    return;
-  }
-  if (!silent) {
-    document.getElementById('fbStatus').textContent = 'טוען...';
-  }
-  fetch(FIREBASE_URL + '/submissions.json')
-    .then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    })
-    .then(function(data) {
-      // המר אובייקט Firebase למערך
-      allSubmissions = [];
-      if (data) {
-        Object.keys(data).forEach(function(key) {
-          var item = data[key];
-          item._fbKey = key;
-          allSubmissions.push(item);
-        });
-        // מיין לפי תאריך הגשה (חדש ראשון)
-        allSubmissions.sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
-      }
-      document.getElementById('fbDot').className = 'fb-dot connected';
-      document.getElementById('fbStatus').textContent = allSubmissions.length + ' הגשות';
-      document.getElementById('lastSync').textContent = 'עודכן: ' + new Date().toLocaleTimeString('he-IL');
-      showView(currentView);
-    })
-    .catch(function(err) {
-      document.getElementById('fbDot').className = 'fb-dot';
-      document.getElementById('fbStatus').textContent = 'שגיאת חיבור';
-      console.error('Firebase load error:', err);
-      if (!silent) {
-        loadFromLocalStorage();
-        document.getElementById('mainContent').insertAdjacentHTML('afterbegin',
-          '<div class="fb-banner">⚠️ לא ניתן להתחבר ל-Firebase (<code>'+err.message+'</code>). מציג נתונים מהדפדפן.</div>');
-      }
-    });
-}
-
-// שמירת עדכון ב-Firebase (שינוי ציון / סטטוס / הערות)
-function updateInFirebase(ref, updates) {
-  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    updateInLocalStorage(ref, updates);
-    return Promise.resolve();
-  }
-  return fetch(FIREBASE_URL + '/submissions/' + ref + '.json', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates)
-  }).then(function(res) {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  });
-}
-
-// גיבוי localStorage
-function loadFromLocalStorage() {
-  var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
-  allSubmissions = raw.slice().reverse();
-  showView(currentView);
-}
-function updateInLocalStorage(ref, updates) {
-  var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
-  var idx = raw.findIndex(function(s){ return s.ref === ref; });
-  if (idx >= 0) Object.assign(raw[idx], updates);
-  localStorage.setItem('securitySubmissions', JSON.stringify(raw));
-}
-
-/* =========================================================
-   תצוגות
-   ========================================================= */
-function levelInfo(sc) {
-  if (sc <= 3) return { label:'נמוכה', cls:'badge-low', color:'#16a34a', fill:'#16a34a', scls:'score-low' };
-  if (sc <= 7) return { label:'בינונית', cls:'badge-mid', color:'#d97706', fill:'#d97706', scls:'score-mid' };
-  return { label:'גבוהה', cls:'badge-high', color:'#dc2626', fill:'#dc2626', scls:'score-high' };
-}
-
-function showView(v) {
-  currentView = v;
-  document.querySelectorAll('.nav-item').forEach(function(n,i){ n.classList.remove('active'); });
-  var idx={dashboard:0,all:1,high:2,pending:3}[v]||0;
-  document.querySelectorAll('.nav-item')[idx].classList.add('active');
-  var titles={dashboard:'דשבורד ראשי',all:'כל ההגשות',high:'אירועים בסיכון גבוה',pending:'ממתינות לבדיקה'};
-  document.getElementById('pageTitle').textContent = titles[v]||v;
-  if (v==='dashboard') renderDashboard();
-  else if (v==='all') renderTable(allSubmissions, 'כל ההגשות');
-  else if (v==='high') renderTable(allSubmissions.filter(function(s){ return (s.manualScore||s.score||0)>=8; }), 'סיכון גבוה');
-  else if (v==='pending') renderTable(allSubmissions.filter(function(s){ return !s.status||s.status==='new'; }), 'ממתינות לבדיקה');
-}
-
-function renderDashboard() {
-  var subs = allSubmissions;
-  var total = subs.length;
-  var low = subs.filter(function(s){ return (s.manualScore||s.score||0)<=3; }).length;
-  var mid = subs.filter(function(s){ var sc=s.manualScore||s.score||0; return sc>=4&&sc<=7; }).length;
-  var high = subs.filter(function(s){ return (s.manualScore||s.score||0)>=8; }).length;
-  var pending = subs.filter(function(s){ return !s.status||s.status==='new'; }).length;
-  var avg = total ? Math.round(subs.reduce(function(a,b){ return a+(b.manualScore||b.score||0); },0)/total) : 0;
-
-  var html = '';
-
-  // Firebase config banner
-  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    html += '<div class="fb-banner">🔥 <strong>Firebase לא מוגדר.</strong> כדי לחבר בין הטופס לדשבורד:<br>';
-    html += '1. צור פרויקט ב- <strong>console.firebase.google.com</strong><br>';
-    html += '2. לך ל-Realtime Database ← Create<br>';
-    html += '3. בחכללי כתיב: <code>{ "rules": { ".read": false, ".write": true } }</code><br>';
-    html += '4. העתק את ה-URL לשני הקבצים: <code>var FIREBASE_URL = \'https://...\'</code></div>';
-  }
-
-  html += '<div class="stats-grid">';
-  html += stat('סה"כ הגשות', total, 'כולל כל הסטטוסים');
-  html += stat('ממתינות', pending, 'טרם טופלו', '#d97706');
-  html += stat('סיכון גבוה', high, 'ציון 8 ומעלה', '#dc2626');
-  html += stat('ציון ממוצע', avg, 'מתוך 10');
-  html += '</div>';
-
-  html += '<div class="chart-grid">';
-  html += '<div class="panel"><div class="panel-head"><h3>התפלגות סיכון</h3></div><div style="padding:1rem 1.25rem">';
-  var mx = Math.max(low,mid,high,1);
-  html += miniBar('נמוכה', low, mx, '#16a34a');
-  html += miniBar('בינונית', mid, mx, '#d97706');
-  html += miniBar('גבוהה', high, mx, '#dc2626');
-  html += '</div></div>';
-
-  html += '<div class="panel"><div class="panel-head"><h3>הגשות אחרונות <span class="live-dot"></span></h3></div>';
-  var recent = subs.slice(0,5);
-  if (!recent.length) { html += '<div style="padding:1rem;font-size:12px;color:var(--muted)">אין הגשות עדיין</div>'; }
-  else {
-    html += '<table><thead><tr><th>אירוע</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
-    recent.forEach(function(s) {
-      var sc = s.manualScore||s.score||0;
-      var li = levelInfo(sc);
-      var st = s.status||'new';
-      html += '<tr><td style="font-weight:500">'+(s.evname||'—')+'</td>';
-      html += '<td><span class="'+li.scls+'" style="font-weight:700">'+sc+'</span></td>';
-      html += '<td><span class="status-badge s-'+st+'">'+statusLabel(st)+'</span></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div></div>';
-
-  if (subs.length) {
-    html += '<div class="panel"><div class="panel-head"><h3>רשימת הגשות</h3></div>';
-    html += buildTableHTML(subs.slice(0,15));
-    html += '</div>';
-  }
-
-  document.getElementById('mainContent').innerHTML = html;
-}
-
-function stat(label, val, sub, color) {
-  return '<div class="stat-card"><div class="lbl">'+label+'</div><div class="val"'+(color?' style="color:'+color+'"':'')+'>'+val+'</div><div class="sub">'+sub+'</div></div>';
-}
-function miniBar(label, count, max, color) {
-  return '<div class="mini-bar"><span class="ml">'+label+'</span><div class="mt"><div class="mf" style="width:'+Math.round(count/max*100)+'%;background:'+color+'"></div></div><span class="mv">'+count+'</span></div>';
-}
-function statusLabel(st) { return {new:'חדש',reviewed:'נבדק',approved:'אושר',pending:'ממתין',rejected:'נדחה'}[st]||st; }
-
-function renderTable(list, title) {
-  var html = '<div class="panel">';
-  html += '<div class="panel-head"><h3>'+title+' ('+list.length+')</h3></div>';
-  html += '<div class="filter-row"><input type="text" placeholder="חיפוש לפי שם אירוע, ארגון, אסמכתא..." oninput="filterTable(this.value,\''+title+'\')" id="searchInput">';
-  html += '<select onchange="filterByLevel(this.value,\''+title+'\')" id="levelFilter"><option value="">כל הרמות</option><option value="low">נמוכה</option><option value="mid">בינונית</option><option value="high">גבוהה</option></select>';
-  html += '<select onchange="filterByStatus(this.value,\''+title+'\')" id="statusFilter"><option value="">כל הסטטוסים</option><option value="new">חדש</option><option value="reviewed">נבדק</option><option value="approved">אושר</option><option value="pending">ממתין</option><option value="rejected">נדחה</option></select>';
-  html += '</div>';
-  html += buildTableHTML(list);
-  html += '</div>';
-  document.getElementById('mainContent').innerHTML = html;
-}
-
-function buildTableHTML(list) {
-  if (!list.length) return '<div class="empty"><div class="icon">📭</div><h3>אין הגשות</h3><p>טפסים שיוגשו יופיעו כאן</p></div>';
-  var html = '<div class="tbl-wrap"><table><thead><tr><th>אסמכתא</th><th>ארגון</th><th>שם האירוע</th><th>תאריך</th><th>ציון</th><th>רמה</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>';
-  list.forEach(function(s) {
-    var sc = s.manualScore||s.score||0;
-    var li = levelInfo(sc);
-    var st = s.status||'new';
-    var ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('he-IL') : '—';
-    html += '<tr>';
-    html += '<td style="font-family:monospace;font-size:10px;color:var(--muted)">'+(s.ref||'—')+'</td>';
-    html += '<td>'+(s.org||'—')+'</td>';
-    html += '<td style="font-weight:500">'+(s.evname||'—')+'</td>';
-    html += '<td style="color:var(--muted)">'+(s.evstart||ts)+'</td>';
-    html += '<td><span class="score-num '+li.scls+'">'+sc+'</span></td>';
-    html += '<td><span class="badge '+li.cls+'">'+li.label+'</span></td>';
-    html += '<td><span class="status-badge s-'+st+'">'+statusLabel(st)+'</span></td>';
-    html += '<td style="white-space:nowrap">';
-    html += '<button class="act-btn" onclick="openDetail(\''+s.ref+'\')">📋 צפה / דרג</button>';
-    html += ' <button class="act-btn" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelete(\''+s.ref+'\',\''+encodeURIComponent(s.evname||'')+'\')">🗑️ מחק</button>';
-    html += '</td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-var filteredCache = [];
-function filterTable(q, title) {
-  var base = getBaseList();
-  var filtered = base.filter(function(s){ return JSON.stringify(s).includes(q); });
-  var tw = document.querySelector('.tbl-wrap');
-  if (tw) tw.outerHTML = buildTableHTML(filtered);
-}
-function filterByLevel(level, title) {
-  var base = getBaseList();
-  var filtered = level==='low'?base.filter(function(s){return(s.manualScore||s.score||0)<=3;}):
-                 level==='mid'?base.filter(function(s){var sc=s.manualScore||s.score||0;return sc>=4&&sc<=7;}):
-                 level==='high'?base.filter(function(s){return(s.manualScore||s.score||0)>=8;}):base;
-  var tw = document.querySelector('.tbl-wrap');
-  if (tw) tw.outerHTML = buildTableHTML(filtered);
-}
-function filterByStatus(status, title) {
-  var base = getBaseList();
-  var filtered = status?base.filter(function(s){return(s.status||'new')===status;}):base;
-  var tw = document.querySelector('.tbl-wrap');
-  if (tw) tw.outerHTML = buildTableHTML(filtered);
-}
-function getBaseList() {
-  if (currentView==='high') return allSubmissions.filter(function(s){return(s.manualScore||s.score||0)>=8;});
-  if (currentView==='pending') return allSubmissions.filter(function(s){return!s.status||s.status==='new';});
-  return allSubmissions;
-}
-
-/* =========================================================
-   מודל פרטים + עריכה
-   ========================================================= */
-function openDetail(ref) {
-  var s = allSubmissions.find(function(x){ return x.ref===ref; });
-  if (!s) return;
-  var sc = s.manualScore||s.score||0;
-  var li = levelInfo(sc);
-  var pct = Math.round(sc/10*100);
-
-  var html = '<div class="score-big">';
-  html += '<div style="font-size:44px;font-weight:700;color:'+li.color+'">'+sc+'</div>';
-  html += '<div style="font-size:11px;color:var(--muted)">מתוך 10</div>';
-  html += '<div class="gauge"><div class="gauge-fill" style="width:'+pct+'%;background:'+li.fill+'"></div></div>';
-  html += '<span class="badge '+li.cls+'" style="font-size:13px">רמת אבטחה: '+li.label+'</span>';
-  html += '</div>';
-
-  function dt(l,v){
-    var d=v||'—';
-    if(v==='כן')d='<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">כן</span>';
-    else if(v==='לא')d='<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:11px">לא</span>';
-    return '<div class="dt"><span class="dl">'+l+'</span><span class="dv">'+d+'</span></div>';
-  }
-
-  html += '<div class="ds-title">פרטי ארגון ואיש קשר</div>';
-  html += dt('ארגון',s.org); html += dt('איש קשר',(s.fname||'')+' '+(s.lname||''));
-  html += dt('אימייל',s.email); html += dt('טלפון',s.phone);
-
-  html += '<div class="ds-title">פרטי האירוע</div>';
-  html += dt('שם האירוע',s.evname);
-  html += dt('תאריכים',(s.evstart||'')+(s.evend&&s.evend!==s.evstart?' — '+s.evend:''));
-  html += dt('מיקום',s.venue); html += dt('קטגוריה',s.evcat);
-  html += dt('קהל',{small:'עד 100',med:'100–500',large:'500–1000',xlarge:'מעל 1000'}[s.guestnum]||s.guestnum||'—');
-  html += dt('כניסה',{invite:'בהזמנה',community:'קהילתי',ticketed:'כרטיסים',open:'פתוח'}[s.entrytype]||s.entrytype||'—');
-
-  html += '<div class="ds-title">גורמי סיכון</div>';
-  html += dt('שעות לילה',s.latenight); html += dt('קרבה לממשלה',s.govprox);
-  html += dt('אלכוהול',s.alcohol); html += dt('כניסה פתוחה',s.entrytype==='open'?'כן':'לא');
-  html += dt('אישים בכירים',s.vip); if(s.vip_detail) html += dt('פירוט VIP',s.vip_detail);
-  html += dt('הפגנות',s.protest); html += dt('היסטוריה',s.history); html += dt('ספורט מגע',s.contact);
-
-  if (s.extra) { html += '<div class="ds-title">מידע נוסף</div><div style="font-size:13px;line-height:1.6">'+s.extra+'</div>'; }
-
-  html += '<div class="manual-section">';
-  html += '<div class="ds-title" style="margin-top:0">✏️ דירוג ידני</div>';
-  html += '<label>שנה ציון (0-10)</label>';
-  html += '<div class="range-row"><input type="range" min="0" max="10" value="'+sc+'" id="mRange" oninput="document.getElementById(\'mNum\').value=this.value"><input type="number" min="0" max="10" value="'+sc+'" id="mNum" oninput="document.getElementById(\'mRange\').value=this.value"></div>';
-  html += '<label>סטטוס</label>';
-  html += '<select class="sel-status" id="mStatus"><option value="new"'+(s.status==='new'?' selected':'')+'>חדש</option><option value="reviewed"'+(s.status==='reviewed'?' selected':'')+'>נבדק</option><option value="approved"'+(s.status==='approved'?' selected':'')+'>אושר</option><option value="pending"'+(s.status==='pending'?' selected':'')+'>ממתין למידע</option><option value="rejected"'+(s.status==='rejected'?' selected':'')+'>נדחה</option></select>';
-  html += '<label>הערות פנימיות</label>';
-  html += '<textarea class="notes-area" id="mNotes" placeholder="הוסף הערות פנימיות...">'+(s.notes||'')+'</textarea>';
-  html += '</div>';
-
-  document.getElementById('modalTitle').textContent = s.evname||'פרטי הגשה';
-  document.getElementById('modalBody').innerHTML = html;
-  document.getElementById('modalFoot').innerHTML =
-    '<button class="btn" onclick="closeModalDirect()">סגור</button>' +
-    '<button class="btn btn-primary" onclick="saveDetail(\''+ref+'\')">💾 שמור ב-Firebase</button>';
-  document.getElementById('modalBg').classList.add('show');
-}
-
-function saveDetail(ref) {
-  var updates = {
-    manualScore: parseInt(document.getElementById('mNum').value)||0,
-    status: document.getElementById('mStatus').value,
-    notes: document.getElementById('mNotes').value,
-    lastUpdated: new Date().toISOString()
-  };
-
-  // עדכן זמנית בזיכרון
-  var idx = allSubmissions.findIndex(function(s){ return s.ref===ref; });
-  if (idx>=0) Object.assign(allSubmissions[idx], updates);
-
-  updateInFirebase(ref, updates)
-    .then(function() {
-      closeModalDirect();
-      showView(currentView);
-      // הצג אישור קצר
-      var toast = document.createElement('div');
-      toast.textContent = '✓ נשמר ב-Firebase';
-      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;font-family:Heebo,sans-serif';
-      document.body.appendChild(toast);
-      setTimeout(function(){ toast.remove(); }, 2500);
-    })
-    .catch(function(err) {
-      alert('שגיאה בשמירה: ' + err.message);
-      showView(currentView);
-    });
-}
-
-function closeModal(e) { if(e.target===document.getElementById('modalBg')) closeModalDirect(); }
-function closeModalDirect() { document.getElementById('modalBg').classList.remove('show'); }
-
-/* =========================================================
-   ייצוא CSV
-   ========================================================= */
-function exportCSV() {
-  if (!allSubmissions.length) { alert('אין נתונים לייצוא'); return; }
-  var keys = ['ref','timestamp','org','fname','lname','email','phone','evname','evstart','venue','evcat','guestnum','score','manualScore','level','status','notes'];
-  var hdrs = ['אסמכתא','תאריך הגשה','ארגון','שם פרטי','שם משפחה','אימייל','טלפון','שם האירוע','תאריך','מיקום','קטגוריה','קהל','ציון אוטומטי','ציון ידני','רמה','סטטוס','הערות'];
-  var csv = hdrs.join(',') + '\n';
-  allSubmissions.forEach(function(s) {
-    csv += keys.map(function(k){ return '"'+(s[k]||'')+'"'; }).join(',') + '\n';
-  });
-  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a'); a.href=url; a.download='security_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* =========================================================
-   🗑️ מחיקת בקשות מ-Firebase
-   ========================================================= */
-
-function deleteFromFirebase(ref) {
-  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    // מחק מ-localStorage
-    var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
-    raw = raw.filter(function(s){ return s.ref !== ref; });
-    localStorage.setItem('securitySubmissions', JSON.stringify(raw));
-    return Promise.resolve();
-  }
-  return fetch(FIREBASE_URL + '/submissions/' + ref + '.json', {
-    method: 'DELETE'
-  }).then(function(res) {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  });
-}
-
-function confirmDelete(ref, evnameEncoded) {
-  var evname = decodeURIComponent(evnameEncoded);
-  document.getElementById('deleteRef').textContent = ref;
-  document.getElementById('deleteEvname').textContent = evname;
-  document.getElementById('deleteModal').classList.add('show');
-  document.getElementById('confirmDeleteBtn').onclick = function() {
-    executeDelete(ref);
-  };
-}
-
-function executeDelete(ref) {
-  var btn = document.getElementById('confirmDeleteBtn');
-  btn.textContent = 'מוחק...';
-  btn.disabled = true;
-
-  deleteFromFirebase(ref)
-    .then(function() {
-      // הסר מהמערך המקומי
-      allSubmissions = allSubmissions.filter(function(s){ return s.ref !== ref; });
-      closeDeleteModal();
-      showView(currentView);
-      // Toast הצלחה
-      var toast = document.createElement('div');
-      toast.textContent = '🗑️ הבקשה נמחקה';
-      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#dc2626;color:white;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;font-family:Heebo,sans-serif';
-      document.body.appendChild(toast);
-      setTimeout(function(){ toast.remove(); }, 2500);
-    })
-    .catch(function(err) {
-      closeDeleteModal();
-      alert('שגיאה במחיקה: ' + err.message);
-    });
-}
-
-function confirmDeleteAll() {
-  if (!confirm('⚠️ האם אתה בטוח שברצונך למחוק את כל ההגשות? פעולה זו בלתי הפיכה!')) return;
-  if (!confirm('אישור אחרון — מחק הכל?')) return;
-
-  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    localStorage.removeItem('securitySubmissions');
-    allSubmissions = [];
-    showView(currentView);
-    return;
-  }
-
-  fetch(FIREBASE_URL + '/submissions.json', { method: 'DELETE' })
-    .then(function() {
-      allSubmissions = [];
-      showView(currentView);
-    })
-    .catch(function(err) { alert('שגיאה: ' + err.message); });
-}
-
-function closeDeleteModal() {
-  document.getElementById('deleteModal').classList.remove('show');
-  var btn = document.getElementById('confirmDeleteBtn');
-  btn.textContent = '🗑️ כן, מחק לצמיתות';
-  btn.disabled = false;
-}
-
-</script>
 
 <!-- DELETE CONFIRM MODAL -->
 <div class="modal-bg" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
@@ -617,5 +173,426 @@ function closeDeleteModal() {
   </div>
 </div>
 
+<script>
+var allSubmissions = [];
+var currentView = 'dashboard';
+var pollingTimer = null;
+
+window.addEventListener('DOMContentLoaded', function() {
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatus').textContent = 'Firebase לא מוגדר';
+    loadFromLocalStorage();
+    return;
+  }
+  loadFromFirebase();
+  pollingTimer = setInterval(function() { loadFromFirebase(true); }, POLLING_INTERVAL);
+});
+
+function loadFromFirebase(silent) {
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) { loadFromLocalStorage(); return; }
+  if (!silent) document.getElementById('fbStatus').textContent = 'טוען...';
+  fetch(FIREBASE_URL + '/submissions.json')
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      allSubmissions = [];
+      if (data) {
+        Object.keys(data).forEach(function(key) {
+          var item = data[key];
+          item._fbKey = key;
+          allSubmissions.push(item);
+        });
+        allSubmissions.sort(function(a, b) { return (b.timestamp || '').localeCompare(a.timestamp || ''); });
+      }
+      document.getElementById('fbDot').className = 'fb-dot connected';
+      document.getElementById('fbStatus').textContent = allSubmissions.length + ' הגשות';
+      document.getElementById('lastSync').textContent = 'עודכן: ' + new Date().toLocaleTimeString('he-IL');
+      showView(currentView);
+    })
+    .catch(function(err) {
+      document.getElementById('fbDot').className = 'fb-dot';
+      document.getElementById('fbStatus').textContent = 'שגיאת חיבור';
+      console.error('Firebase load error:', err);
+      if (!silent) {
+        loadFromLocalStorage();
+        document.getElementById('mainContent').insertAdjacentHTML('afterbegin',
+          '<div class="fb-banner">⚠️ לא ניתן להתחבר ל-Firebase (<code>' + err.message + '</code>). מציג נתונים מהדפדפן.</div>');
+      }
+    });
+}
+
+function updateInFirebase(ref, updates) {
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) { updateInLocalStorage(ref, updates); return Promise.resolve(); }
+  return fetch(FIREBASE_URL + '/submissions/' + ref + '.json', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates)
+  }).then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  });
+}
+
+function loadFromLocalStorage() {
+  var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
+  allSubmissions = raw.slice().reverse();
+  showView(currentView);
+}
+function updateInLocalStorage(ref, updates) {
+  var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
+  var idx = raw.findIndex(function(s) { return s.ref === ref; });
+  if (idx >= 0) Object.assign(raw[idx], updates);
+  localStorage.setItem('securitySubmissions', JSON.stringify(raw));
+}
+
+/* =========================================================
+   תצוגות
+   ========================================================= */
+function levelInfo(sc) {
+  if (sc <= 3) return { label: 'נמוכה', cls: 'badge-low', color: '#16a34a', fill: '#16a34a', scls: 'score-low' };
+  if (sc <= 7) return { label: 'בינונית', cls: 'badge-mid', color: '#d97706', fill: '#d97706', scls: 'score-mid' };
+  return { label: 'גבוהה', cls: 'badge-high', color: '#dc2626', fill: '#dc2626', scls: 'score-high' };
+}
+
+function showView(v) {
+  currentView = v;
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var idx = { dashboard: 0, all: 1, high: 2, pending: 3 }[v] || 0;
+  document.querySelectorAll('.nav-item')[idx].classList.add('active');
+  var titles = { dashboard: 'דשבורד ראשי', all: 'כל ההגשות', high: 'אירועים בסיכון גבוה', pending: 'ממתינות לבדיקה' };
+  document.getElementById('pageTitle').textContent = titles[v] || v;
+  if (v === 'dashboard') renderDashboard();
+  else if (v === 'all') renderTable(allSubmissions, 'כל ההגשות');
+  else if (v === 'high') renderTable(allSubmissions.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }), 'סיכון גבוה');
+  else if (v === 'pending') renderTable(allSubmissions.filter(function(s) { return !s.status || s.status === 'new'; }), 'ממתינות לבדיקה');
+}
+
+function renderDashboard() {
+  var subs = allSubmissions;
+  var total = subs.length;
+  var low = subs.filter(function(s) { return (s.manualScore || s.score || 0) <= 3; }).length;
+  var mid = subs.filter(function(s) { var sc = s.manualScore || s.score || 0; return sc >= 4 && sc <= 7; }).length;
+  var high = subs.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }).length;
+  var pending = subs.filter(function(s) { return !s.status || s.status === 'new'; }).length;
+  var avg = total ? Math.round(subs.reduce(function(a, b) { return a + (b.manualScore || b.score || 0); }, 0) / total) : 0;
+
+  var html = '';
+
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
+    html += '<div class="fb-banner">🔥 <strong>Firebase לא מוגדר.</strong> כדי לחבר בין הטופס לדשבורד:<br>';
+    html += '1. צור פרויקט ב- <strong>console.firebase.google.com</strong><br>';
+    html += '2. לך ל-Realtime Database ← Create<br>';
+    html += '3. הגדר כללי כתיבה: <code>{ "rules": { ".read": false, ".write": true } }</code><br>';
+    html += '4. העתק את ה-URL לשני הקבצים: <code>var FIREBASE_URL = \'https://...\'</code></div>';
+  }
+
+  html += '<div class="stats-grid">';
+  html += stat('סה"כ הגשות', total, 'כולל כל הסטטוסים');
+  html += stat('ממתינות', pending, 'טרם טופלו', '#d97706');
+  html += stat('סיכון גבוה', high, 'ציון 8 ומעלה', '#dc2626');
+  html += stat('ציון ממוצע', avg, 'מתוך 10');
+  html += '</div>';
+
+  html += '<div class="chart-grid">';
+  html += '<div class="panel"><div class="panel-head"><h3>התפלגות סיכון</h3></div><div style="padding:1rem 1.25rem">';
+  var mx = Math.max(low, mid, high, 1);
+  html += miniBar('נמוכה', low, mx, '#16a34a');
+  html += miniBar('בינונית', mid, mx, '#d97706');
+  html += miniBar('גבוהה', high, mx, '#dc2626');
+  html += '</div></div>';
+
+  html += '<div class="panel"><div class="panel-head"><h3>הגשות אחרונות <span class="live-dot"></span></h3></div>';
+  var recent = subs.slice(0, 5);
+  if (!recent.length) {
+    html += '<div style="padding:1rem;font-size:12px;color:var(--muted)">אין הגשות עדיין</div>';
+  } else {
+    html += '<table><thead><tr><th>אירוע</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
+    recent.forEach(function(s) {
+      var sc = s.manualScore || s.score || 0;
+      var li = levelInfo(sc);
+      var st = s.status || 'new';
+      html += '<tr><td style="font-weight:500">' + (s.evname || '—') + '</td>';
+      html += '<td><span class="' + li.scls + '" style="font-weight:700">' + sc + '</span></td>';
+      html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div></div>';
+
+  if (subs.length) {
+    html += '<div class="panel"><div class="panel-head"><h3>רשימת הגשות</h3></div>';
+    html += buildTableHTML(subs.slice(0, 15));
+    html += '</div>';
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function stat(label, val, sub, color) {
+  return '<div class="stat-card"><div class="lbl">' + label + '</div><div class="val"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div><div class="sub">' + sub + '</div></div>';
+}
+function miniBar(label, count, max, color) {
+  return '<div class="mini-bar"><span class="ml">' + label + '</span><div class="mt"><div class="mf" style="width:' + Math.round(count / max * 100) + '%;background:' + color + '"></div></div><span class="mv">' + count + '</span></div>';
+}
+function statusLabel(st) { return { new: 'חדש', reviewed: 'נבדק', approved: 'אושר', pending: 'ממתין', rejected: 'נדחה' }[st] || st; }
+
+function renderTable(list, title) {
+  var html = '<div class="panel">';
+  html += '<div class="panel-head"><h3>' + title + ' (' + list.length + ')</h3></div>';
+  html += '<div class="filter-row"><input type="text" placeholder="חיפוש לפי שם אירוע, ארגון, אסמכתא..." oninput="filterTable(this.value)" id="searchInput">';
+  html += '<select onchange="filterByLevel(this.value)" id="levelFilter"><option value="">כל הרמות</option><option value="low">נמוכה</option><option value="mid">בינונית</option><option value="high">גבוהה</option></select>';
+  html += '<select onchange="filterByStatus(this.value)" id="statusFilter"><option value="">כל הסטטוסים</option><option value="new">חדש</option><option value="reviewed">נבדק</option><option value="approved">אושר</option><option value="pending">ממתין</option><option value="rejected">נדחה</option></select>';
+  html += '</div>';
+  html += buildTableHTML(list);
+  html += '</div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function buildTableHTML(list) {
+  if (!list.length) return '<div class="empty"><div class="icon">📭</div><h3>אין הגשות</h3><p>טפסים שיוגשו יופיעו כאן</p></div>';
+  var html = '<div class="tbl-wrap"><table><thead><tr><th>אסמכתא</th><th>מ. זיהוי</th><th>בחסות</th><th>שם האירוע</th><th>תאריך</th><th>ציון</th><th>רמה</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>';
+  list.forEach(function(s) {
+    var sc = s.manualScore || s.score || 0;
+    var li = levelInfo(sc);
+    var st = s.status || 'new';
+    var ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('he-IL') : '—';
+    html += '<tr>';
+    html += '<td style="font-family:monospace;font-size:10px;color:var(--muted)">' + (s.ref || '—') + '</td>';
+    html += '<td style="font-weight:600;color:var(--navy2)">' + (s.personalid || '—') + '</td>';
+    html += '<td>' + (s.org || '—') + '</td>';
+    html += '<td style="font-weight:500">' + (s.evname || '—') + '</td>';
+    html += '<td style="color:var(--muted)">' + (s.evstart || ts) + '</td>';
+    html += '<td><span class="score-num ' + li.scls + '">' + sc + '</span></td>';
+    html += '<td><span class="badge ' + li.cls + '">' + li.label + '</span></td>';
+    html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
+    html += '<td style="white-space:nowrap">';
+    html += '<button class="act-btn" onclick="openDetail(\'' + s.ref + '\')">📋 צפה / דרג</button>';
+    html += ' <button class="act-btn" style="color:#dc2626;border-color:#fca5a5" onclick="confirmDelete(\'' + s.ref + '\',\'' + encodeURIComponent(s.evname || '') + '\')">🗑️ מחק</button>';
+    html += '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function filterTable(q) {
+  var base = getBaseList();
+  var filtered = base.filter(function(s) { return JSON.stringify(s).toLowerCase().includes(q.toLowerCase()); });
+  var tw = document.querySelector('.tbl-wrap');
+  if (tw) tw.outerHTML = buildTableHTML(filtered);
+}
+function filterByLevel(level) {
+  var base = getBaseList();
+  var filtered = level === 'low' ? base.filter(function(s) { return (s.manualScore || s.score || 0) <= 3; }) :
+                 level === 'mid' ? base.filter(function(s) { var sc = s.manualScore || s.score || 0; return sc >= 4 && sc <= 7; }) :
+                 level === 'high' ? base.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }) : base;
+  var tw = document.querySelector('.tbl-wrap');
+  if (tw) tw.outerHTML = buildTableHTML(filtered);
+}
+function filterByStatus(status) {
+  var base = getBaseList();
+  var filtered = status ? base.filter(function(s) { return (s.status || 'new') === status; }) : base;
+  var tw = document.querySelector('.tbl-wrap');
+  if (tw) tw.outerHTML = buildTableHTML(filtered);
+}
+function getBaseList() {
+  if (currentView === 'high') return allSubmissions.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; });
+  if (currentView === 'pending') return allSubmissions.filter(function(s) { return !s.status || s.status === 'new'; });
+  return allSubmissions;
+}
+
+/* =========================================================
+   מודל פרטים + עריכה
+   ========================================================= */
+function openDetail(ref) {
+  var s = allSubmissions.find(function(x) { return x.ref === ref; });
+  if (!s) return;
+  var sc = s.manualScore || s.score || 0;
+  var li = levelInfo(sc);
+  var pct = Math.round(sc / 10 * 100);
+
+  var html = '<div class="score-big">';
+  html += '<div style="font-size:44px;font-weight:700;color:' + li.color + '">' + sc + '</div>';
+  html += '<div style="font-size:11px;color:var(--muted)">מתוך 10</div>';
+  html += '<div class="gauge"><div class="gauge-fill" style="width:' + pct + '%;background:' + li.fill + '"></div></div>';
+  html += '<span class="badge ' + li.cls + '" style="font-size:13px">רמת אבטחה: ' + li.label + '</span>';
+  html += '</div>';
+
+  function dt(l, v) {
+    var d = v || '—';
+    if (v === 'כן') d = '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">כן</span>';
+    else if (v === 'לא') d = '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:11px">לא</span>';
+    return '<div class="dt"><span class="dl">' + l + '</span><span class="dv">' + d + '</span></div>';
+  }
+
+  html += '<div class="ds-title">פרטי ארגון ואיש קשר</div>';
+  html += dt('בחסות', s.org);
+  html += dt('מספר זיהוי אישי', s.personalid);
+  html += dt('מארגן ידוע ומוכר', s.orgknown);
+  if (s.orgknown_detail) html += dt('פירוט מארגן', s.orgknown_detail);
+  html += dt('איש קשר', (s.fname || '') + ' ' + (s.lname || ''));
+  html += dt('אימייל', s.email);
+  html += dt('טלפון', s.phone);
+
+  html += '<div class="ds-title">פרטי האירוע</div>';
+  html += dt('שם האירוע', s.evname);
+  html += dt('תאריכים', (s.evstart || '') + (s.evend && s.evend !== s.evstart ? ' — ' + s.evend : ''));
+  html += dt('מיקום', s.venue);
+  html += dt('קטגוריה', s.evcat);
+  if (s.invitelink) html += dt('קישור הזמנה', s.invitelink);
+  html += dt('קהילה יהודית', s.jewishcommunity);
+  html += dt('אירוע חוזר', { weekly: 'שבועי', monthly: 'חודשי', yearly: 'שנתי', no: 'לא' }[s.recurring] || s.recurring || '—');
+  html += dt('סוג כניסה', { invite: 'בהזמנה', community: 'קהילתי', ticketed: 'כרטיסים', open: 'פתוח לציבור', other: s.entrytype_other || 'אחר', unknown: 'לא יודע' }[s.entrytype] || s.entrytype || '—');
+
+  html += '<div class="ds-title">גורמי סיכון</div>';
+  html += dt('במוסד ממשלתי', s.govprox);
+  html += dt('כניסה פתוחה', s.entrytype === 'open' ? 'כן' : 'לא');
+  html += dt('אישים בכירים', s.vip);
+  if (s.vip_detail) html += dt('פירוט VIP', s.vip_detail);
+  html += dt('הפגנות', s.protest);
+  html += dt('תפקיד באירוע', s.eventrole === 'אחר' ? (s.eventrole_other || 'אחר') : (s.eventrole || '—'));
+
+  if (s.extra) {
+    html += '<div class="ds-title">מידע נוסף</div><div style="font-size:13px;line-height:1.6">' + s.extra + '</div>';
+  }
+
+  html += '<div class="manual-section">';
+  html += '<div class="ds-title" style="margin-top:0">✏️ דירוג ידני</div>';
+  html += '<label>שנה ציון (0-10)</label>';
+  html += '<div class="range-row"><input type="range" min="0" max="10" value="' + sc + '" id="mRange" oninput="document.getElementById(\'mNum\').value=this.value"><input type="number" min="0" max="10" value="' + sc + '" id="mNum" oninput="document.getElementById(\'mRange\').value=this.value"></div>';
+  html += '<label>סטטוס</label>';
+  html += '<select class="sel-status" id="mStatus">';
+  html += '<option value="new"' + (s.status === 'new' ? ' selected' : '') + '>חדש</option>';
+  html += '<option value="reviewed"' + (s.status === 'reviewed' ? ' selected' : '') + '>נבדק</option>';
+  html += '<option value="approved"' + (s.status === 'approved' ? ' selected' : '') + '>אושר</option>';
+  html += '<option value="pending"' + (s.status === 'pending' ? ' selected' : '') + '>ממתין למידע</option>';
+  html += '<option value="rejected"' + (s.status === 'rejected' ? ' selected' : '') + '>נדחה</option>';
+  html += '</select>';
+  html += '<label>הערות פנימיות</label>';
+  html += '<textarea class="notes-area" id="mNotes" placeholder="הוסף הערות פנימיות...">' + (s.notes || '') + '</textarea>';
+  html += '</div>';
+
+  document.getElementById('modalTitle').textContent = s.evname || 'פרטי הגשה';
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalFoot').innerHTML =
+    '<button class="btn" onclick="closeModalDirect()">סגור</button>' +
+    '<button class="btn btn-primary" onclick="saveDetail(\'' + ref + '\')">💾 שמור ב-Firebase</button>';
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function saveDetail(ref) {
+  var updates = {
+    manualScore: parseInt(document.getElementById('mNum').value) || 0,
+    status: document.getElementById('mStatus').value,
+    notes: document.getElementById('mNotes').value,
+    lastUpdated: new Date().toISOString()
+  };
+  var idx = allSubmissions.findIndex(function(s) { return s.ref === ref; });
+  if (idx >= 0) Object.assign(allSubmissions[idx], updates);
+  updateInFirebase(ref, updates)
+    .then(function() {
+      closeModalDirect();
+      showView(currentView);
+      var toast = document.createElement('div');
+      toast.textContent = '✓ נשמר ב-Firebase';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;font-family:Heebo,sans-serif';
+      document.body.appendChild(toast);
+      setTimeout(function() { toast.remove(); }, 2500);
+    })
+    .catch(function(err) {
+      alert('שגיאה בשמירה: ' + err.message);
+      showView(currentView);
+    });
+}
+
+function closeModal(e) { if (e.target === document.getElementById('modalBg')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modalBg').classList.remove('show'); }
+
+/* =========================================================
+   ייצוא CSV
+   ========================================================= */
+function exportCSV() {
+  if (!allSubmissions.length) { alert('אין נתונים לייצוא'); return; }
+  var keys = ['ref', 'timestamp', 'org', 'personalid', 'fname', 'lname', 'email', 'phone', 'evname', 'evstart', 'venue', 'evcat', 'jewishcommunity', 'recurring', 'govprox', 'score', 'manualScore', 'level', 'status', 'notes'];
+  var hdrs = ['אסמכתא', 'תאריך הגשה', 'בחסות', 'מספר זיהוי אישי', 'שם פרטי', 'שם משפחה', 'אימייל', 'טלפון', 'שם האירוע', 'תאריך', 'מיקום', 'קטגוריה', 'קהילה יהודית', 'אירוע חוזר', 'במוסד ממשלתי', 'ציון אוטומטי', 'ציון ידני', 'רמה', 'סטטוס', 'הערות'];
+  var csv = hdrs.join(',') + '\n';
+  allSubmissions.forEach(function(s) {
+    csv += keys.map(function(k) { return '"' + (s[k] || '') + '"'; }).join(',') + '\n';
+  });
+  var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'security_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================
+   מחיקה
+   ========================================================= */
+function deleteFromFirebase(ref) {
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
+    var raw = JSON.parse(localStorage.getItem('securitySubmissions') || '[]');
+    raw = raw.filter(function(s) { return s.ref !== ref; });
+    localStorage.setItem('securitySubmissions', JSON.stringify(raw));
+    return Promise.resolve();
+  }
+  return fetch(FIREBASE_URL + '/submissions/' + ref + '.json', { method: 'DELETE' })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    });
+}
+
+function confirmDelete(ref, evnameEncoded) {
+  var evname = decodeURIComponent(evnameEncoded);
+  document.getElementById('deleteRef').textContent = ref;
+  document.getElementById('deleteEvname').textContent = evname;
+  document.getElementById('deleteModal').classList.add('show');
+  document.getElementById('confirmDeleteBtn').onclick = function() { executeDelete(ref); };
+}
+
+function executeDelete(ref) {
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.textContent = 'מוחק...';
+  btn.disabled = true;
+  deleteFromFirebase(ref)
+    .then(function() {
+      allSubmissions = allSubmissions.filter(function(s) { return s.ref !== ref; });
+      closeDeleteModal();
+      showView(currentView);
+      var toast = document.createElement('div');
+      toast.textContent = '🗑️ הבקשה נמחקה';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#dc2626;color:white;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;font-family:Heebo,sans-serif';
+      document.body.appendChild(toast);
+      setTimeout(function() { toast.remove(); }, 2500);
+    })
+    .catch(function(err) { closeDeleteModal(); alert('שגיאה במחיקה: ' + err.message); });
+}
+
+function confirmDeleteAll() {
+  if (!confirm('⚠️ האם אתה בטוח שברצונך למחוק את כל ההגשות? פעולה זו בלתי הפיכה!')) return;
+  if (!confirm('אישור אחרון — מחק הכל?')) return;
+  if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
+    localStorage.removeItem('securitySubmissions');
+    allSubmissions = [];
+    showView(currentView);
+    return;
+  }
+  fetch(FIREBASE_URL + '/submissions.json', { method: 'DELETE' })
+    .then(function() { allSubmissions = []; showView(currentView); })
+    .catch(function(err) { alert('שגיאה: ' + err.message); });
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+  var btn = document.getElementById('confirmDeleteBtn');
+  btn.textContent = '🗑️ כן, מחק לצמיתות';
+  btn.disabled = false;
+}
+</script>
 </body>
 </html>
