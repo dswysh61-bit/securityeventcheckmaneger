@@ -60,6 +60,9 @@ tr:last-child td{border-bottom:none}
 .s-pending{background:#fef3c7;color:#92400e}
 .s-approved{background:#dcfce7;color:#15803d}
 .s-rejected{background:#fee2e2;color:#991b1b}
+.submit-time{display:flex;flex-direction:column;gap:1px}
+.submit-time .st-date{font-size:11px;font-weight:600;color:var(--text)}
+.submit-time .st-time{font-size:10px;color:var(--muted)}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:1rem}
 .modal-bg.show{display:flex}
 .modal{background:white;border-radius:14px;max-width:600px;width:100%;max-height:92vh;overflow-y:auto;direction:rtl}
@@ -249,6 +252,18 @@ function updateInLocalStorage(ref, updates) {
 }
 
 /* =========================================================
+   עזר: פורמט תאריך ושעת הגשה
+   ========================================================= */
+function formatSubmitDateTime(ts) {
+  if (!ts) return { date: '—', time: '' };
+  var d = new Date(ts);
+  if (isNaN(d)) return { date: '—', time: '' };
+  var date = d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  var time = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  return { date: date, time: time };
+}
+
+/* =========================================================
    תצוגות
    ========================================================= */
 function levelInfo(sc) {
@@ -309,14 +324,18 @@ function renderDashboard() {
   if (!recent.length) {
     html += '<div style="padding:1rem;font-size:12px;color:var(--muted)">אין הגשות עדיין</div>';
   } else {
-    html += '<table><thead><tr><th>אירוע</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
+    html += '<table><thead><tr><th>אירוע</th><th>הוגש</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
     recent.forEach(function(s) {
       var sc = s.manualScore || s.score || 0;
       var li = levelInfo(sc);
       var st = s.status || 'new';
-      html += '<tr><td style="font-weight:500">' + (s.evname || '—') + '</td>';
+      var dt = formatSubmitDateTime(s.timestamp);
+      html += '<tr>';
+      html += '<td style="font-weight:500">' + (s.evname || '—') + '</td>';
+      html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
       html += '<td><span class="' + li.scls + '" style="font-weight:700">' + sc + '</span></td>';
-      html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td></tr>';
+      html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
+      html += '</tr>';
     });
     html += '</tbody></table>';
   }
@@ -353,18 +372,19 @@ function renderTable(list, title) {
 
 function buildTableHTML(list) {
   if (!list.length) return '<div class="empty"><div class="icon">📭</div><h3>אין הגשות</h3><p>טפסים שיוגשו יופיעו כאן</p></div>';
-  var html = '<div class="tbl-wrap"><table><thead><tr><th>אסמכתא</th><th>מ. זיהוי</th><th>בחסות</th><th>שם האירוע</th><th>תאריך</th><th>ציון</th><th>רמה</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>';
+  var html = '<div class="tbl-wrap"><table><thead><tr><th>אסמכתא</th><th>מ. זיהוי</th><th>בחסות</th><th>שם האירוע</th><th>תאריך אירוע</th><th>הוגש ב</th><th>ציון</th><th>רמה</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>';
   list.forEach(function(s) {
     var sc = s.manualScore || s.score || 0;
     var li = levelInfo(sc);
     var st = s.status || 'new';
-    var ts = s.timestamp ? new Date(s.timestamp).toLocaleDateString('he-IL') : '—';
+    var dt = formatSubmitDateTime(s.timestamp);
     html += '<tr>';
     html += '<td style="font-family:monospace;font-size:10px;color:var(--muted)">' + (s.ref || '—') + '</td>';
     html += '<td style="font-weight:600;color:var(--navy2)">' + (s.personalid || '—') + '</td>';
     html += '<td>' + (s.org || '—') + '</td>';
     html += '<td style="font-weight:500">' + (s.evname || '—') + '</td>';
-    html += '<td style="color:var(--muted)">' + (s.evstart || ts) + '</td>';
+    html += '<td style="color:var(--muted)">' + (s.evstart || '—') + '</td>';
+    html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
     html += '<td><span class="score-num ' + li.scls + '">' + sc + '</span></td>';
     html += '<td><span class="badge ' + li.cls + '">' + li.label + '</span></td>';
     html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
@@ -412,15 +432,19 @@ function openDetail(ref) {
   var sc = s.manualScore || s.score || 0;
   var li = levelInfo(sc);
   var pct = Math.round(sc / 10 * 100);
+  var dt = formatSubmitDateTime(s.timestamp);
 
   var html = '<div class="score-big">';
   html += '<div style="font-size:44px;font-weight:700;color:' + li.color + '">' + sc + '</div>';
   html += '<div style="font-size:11px;color:var(--muted)">מתוך 10</div>';
   html += '<div class="gauge"><div class="gauge-fill" style="width:' + pct + '%;background:' + li.fill + '"></div></div>';
   html += '<span class="badge ' + li.cls + '" style="font-size:13px">רמת אבטחה: ' + li.label + '</span>';
+  if (dt.date !== '—') {
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--muted)">הוגש ב: <strong style="color:var(--text)">' + dt.date + ' בשעה ' + dt.time + '</strong></div>';
+  }
   html += '</div>';
 
-  function dt(l, v) {
+  function dtRow(l, v) {
     var d = v || '—';
     if (v === 'כן') d = '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">כן</span>';
     else if (v === 'לא') d = '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:11px">לא</span>';
@@ -428,31 +452,31 @@ function openDetail(ref) {
   }
 
   html += '<div class="ds-title">פרטי ארגון ואיש קשר</div>';
-  html += dt('בחסות', s.org);
-  html += dt('מספר זיהוי אישי', s.personalid);
-  html += dt('מארגן ידוע ומוכר', s.orgknown);
-  if (s.orgknown_detail) html += dt('פירוט מארגן', s.orgknown_detail);
-  html += dt('איש קשר', (s.fname || '') + ' ' + (s.lname || ''));
-  html += dt('אימייל', s.email);
-  html += dt('טלפון', s.phone);
+  html += dtRow('בחסות', s.org);
+  html += dtRow('מספר זיהוי אישי', s.personalid);
+  html += dtRow('מארגן ידוע ומוכר', s.orgknown);
+  if (s.orgknown_detail) html += dtRow('פירוט מארגן', s.orgknown_detail);
+  html += dtRow('איש קשר', (s.fname || '') + ' ' + (s.lname || ''));
+  html += dtRow('אימייל', s.email);
+  html += dtRow('טלפון', s.phone);
 
   html += '<div class="ds-title">פרטי האירוע</div>';
-  html += dt('שם האירוע', s.evname);
-  html += dt('תאריכים', (s.evstart || '') + (s.evend && s.evend !== s.evstart ? ' — ' + s.evend : ''));
-  html += dt('מיקום', s.venue);
-  html += dt('קטגוריה', s.evcat);
-  if (s.invitelink) html += dt('קישור הזמנה', s.invitelink);
-  html += dt('קהילה יהודית', s.jewishcommunity);
-  html += dt('אירוע חוזר', { weekly: 'שבועי', monthly: 'חודשי', yearly: 'שנתי', no: 'לא' }[s.recurring] || s.recurring || '—');
-  html += dt('סוג כניסה', { invite: 'בהזמנה', community: 'קהילתי', ticketed: 'כרטיסים', open: 'פתוח לציבור', other: s.entrytype_other || 'אחר', unknown: 'לא יודע' }[s.entrytype] || s.entrytype || '—');
+  html += dtRow('שם האירוע', s.evname);
+  html += dtRow('תאריכים', (s.evstart || '') + (s.evend && s.evend !== s.evstart ? ' — ' + s.evend : ''));
+  html += dtRow('מיקום', s.venue);
+  html += dtRow('קטגוריה', s.evcat);
+  if (s.invitelink) html += dtRow('קישור הזמנה', s.invitelink);
+  html += dtRow('קהילה יהודית', s.jewishcommunity);
+  html += dtRow('אירוע חוזר', { weekly: 'שבועי', monthly: 'חודשי', yearly: 'שנתי', no: 'לא' }[s.recurring] || s.recurring || '—');
+  html += dtRow('סוג כניסה', { invite: 'בהזמנה', community: 'קהילתי', ticketed: 'כרטיסים', open: 'פתוח לציבור', other: s.entrytype_other || 'אחר', unknown: 'לא יודע' }[s.entrytype] || s.entrytype || '—');
 
   html += '<div class="ds-title">גורמי סיכון</div>';
-  html += dt('במוסד ממשלתי', s.govprox);
-  html += dt('כניסה פתוחה', s.entrytype === 'open' ? 'כן' : 'לא');
-  html += dt('אישים בכירים', s.vip);
-  if (s.vip_detail) html += dt('פירוט VIP', s.vip_detail);
-  html += dt('הפגנות', s.protest);
-  html += dt('תפקיד באירוע', s.eventrole === 'אחר' ? (s.eventrole_other || 'אחר') : (s.eventrole || '—'));
+  html += dtRow('במוסד ממשלתי', s.govprox);
+  html += dtRow('כניסה פתוחה', s.entrytype === 'open' ? 'כן' : 'לא');
+  html += dtRow('אישים בכירים', s.vip);
+  if (s.vip_detail) html += dtRow('פירוט VIP', s.vip_detail);
+  html += dtRow('הפגנות', s.protest);
+  html += dtRow('תפקיד באירוע', s.eventrole === 'אחר' ? (s.eventrole_other || 'אחר') : (s.eventrole || '—'));
 
   if (s.extra) {
     html += '<div class="ds-title">מידע נוסף</div><div style="font-size:13px;line-height:1.6">' + s.extra + '</div>';
@@ -516,10 +540,17 @@ function closeModalDirect() { document.getElementById('modalBg').classList.remov
 function exportCSV() {
   if (!allSubmissions.length) { alert('אין נתונים לייצוא'); return; }
   var keys = ['ref', 'timestamp', 'org', 'personalid', 'fname', 'lname', 'email', 'phone', 'evname', 'evstart', 'venue', 'evcat', 'jewishcommunity', 'recurring', 'govprox', 'score', 'manualScore', 'level', 'status', 'notes'];
-  var hdrs = ['אסמכתא', 'תאריך הגשה', 'בחסות', 'מספר זיהוי אישי', 'שם פרטי', 'שם משפחה', 'אימייל', 'טלפון', 'שם האירוע', 'תאריך', 'מיקום', 'קטגוריה', 'קהילה יהודית', 'אירוע חוזר', 'במוסד ממשלתי', 'ציון אוטומטי', 'ציון ידני', 'רמה', 'סטטוס', 'הערות'];
+  var hdrs = ['אסמכתא', 'תאריך ושעת הגשה', 'בחסות', 'מספר זיהוי אישי', 'שם פרטי', 'שם משפחה', 'אימייל', 'טלפון', 'שם האירוע', 'תאריך אירוע', 'מיקום', 'קטגוריה', 'קהילה יהודית', 'אירוע חוזר', 'במוסד ממשלתי', 'ציון אוטומטי', 'ציון ידני', 'רמה', 'סטטוס', 'הערות'];
   var csv = hdrs.join(',') + '\n';
   allSubmissions.forEach(function(s) {
-    csv += keys.map(function(k) { return '"' + (s[k] || '') + '"'; }).join(',') + '\n';
+    csv += keys.map(function(k) {
+      var v = s[k] || '';
+      if (k === 'timestamp' && v) {
+        var dt = formatSubmitDateTime(v);
+        v = dt.date + ' ' + dt.time;
+      }
+      return '"' + v + '"';
+    }).join(',') + '\n';
   });
   var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
   var url = URL.createObjectURL(blob);
