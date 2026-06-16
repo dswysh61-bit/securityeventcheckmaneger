@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>דשבורד ניהול אבטחה</title>
+<title>◊ì◊©◊ë◊ï◊®◊ì ◊†◊ô◊î◊ï◊ú ◊ê◊ë◊ò◊ó◊î</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#0f2744;--navy2:#1a3a5c;--blue:#2563eb;--blue-light:#dbeafe;--green:#16a34a;--green-bg:#dcfce7;--amber:#d97706;--amber-bg:#fef3c7;--red:#dc2626;--red-bg:#fee2e2;--border:#e2e8f0;--bg:#f1f5f9;--text:#1e293b;--muted:#64748b;--subtle:#94a3b8}
@@ -120,55 +120,57 @@ tr:last-child td{border-bottom:none}
 <script>
   var FIREBASE_URL = 'https://security-event-check-default-rtdb.europe-west1.firebasedatabase.app';
   var POLLING_INTERVAL = 15000;
-  var MANAGER_NAME = 'מנהל מערכת'; // ← שנה כאן את שם המנהל שיוצג בראש הדשבורד
+  var MANAGER_NAME = '◊û◊†◊î◊ú ◊û◊¢◊®◊õ◊™'; // ‚Üê ◊©◊†◊î ◊õ◊ê◊ü ◊ê◊™ ◊©◊ù ◊î◊û◊†◊î◊ú ◊©◊ô◊ï◊¶◊í ◊ë◊®◊ê◊© ◊î◊ì◊©◊ë◊ï◊®◊ì
 </script>
 
 <div class="sidebar">
   <div class="sb-logo">
-    <h2><span class="fb-dot" id="fbDot"></span>מרכז ניהול אבטחה</h2>
-    <p id="fbStatus">מתחבר ל-Firebase...</p>
+    <h2><span class="fb-dot" id="fbDot"></span>◊û◊®◊õ◊ñ ◊†◊ô◊î◊ï◊ú ◊ê◊ë◊ò◊ó◊î</h2>
+    <p id="fbStatus">◊û◊™◊ó◊ë◊® ◊ú-Firebase...</p>
   </div>
-  <div class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">📊</span> דשבורד</div>
-  <div class="nav-item" onclick="showView('all')"><span class="nav-icon">📋</span> כל ההגשות</div>
-  <div class="nav-item" onclick="showView('high')"><span class="nav-icon">🔴</span> סיכון גבוה</div>
-  <div class="nav-item" onclick="showView('pending')"><span class="nav-icon">⏳</span> ממתינות לבדיקה</div>
+  <div class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">üìä</span> ◊ì◊©◊ë◊ï◊®◊ì</div>
+  <div class="nav-item" onclick="showView('all')"><span class="nav-icon">üìã</span> ◊õ◊ú ◊î◊î◊í◊©◊ï◊™</div>
+  <div class="nav-item" onclick="showView('events')"><span class="nav-icon">üìÖ</span> ◊ê◊ô◊®◊ï◊¢◊ô◊ù</div>
+  <div class="nav-item" onclick="showView('meetings')"><span class="nav-icon">ü§ù</span> ◊§◊í◊ô◊©◊ï◊™</div>
+  <div class="nav-item" onclick="showView('high')"><span class="nav-icon">üî¥</span> ◊°◊ô◊õ◊ï◊ü ◊í◊ë◊ï◊î</div>
+  <div class="nav-item" onclick="showView('pending')"><span class="nav-icon">‚è≥</span> ◊û◊û◊™◊ô◊†◊ï◊™ ◊ú◊ë◊ì◊ô◊ß◊î</div>
   <div style="margin-top:auto;padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.1)">
-    <button class="btn" style="width:100%;margin-bottom:8px;font-size:11px" onclick="loadFromFirebase()">🔄 רענן נתונים</button>
-    <div style="font-size:10px;opacity:.4" id="lastSync">לא סונכרן עדיין</div>
+    <button class="btn" style="width:100%;margin-bottom:8px;font-size:11px" onclick="loadFromFirebase()">üîÑ ◊®◊¢◊†◊ü ◊†◊™◊ï◊†◊ô◊ù</button>
+    <div style="font-size:10px;opacity:.4" id="lastSync">◊ú◊ê ◊°◊ï◊†◊õ◊®◊ü ◊¢◊ì◊ô◊ô◊ü</div>
   </div>
 </div>
 
 <div class="main">
   <div class="topbar">
-    <h1 id="pageTitle">דשבורד ראשי</h1>
+    <h1 id="pageTitle">◊ì◊©◊ë◊ï◊®◊ì ◊®◊ê◊©◊ô</h1>
     <div style="display:flex;gap:12px;align-items:center">
       <div class="admin-chip" id="adminChip"></div>
       <div style="display:flex;gap:8px">
-        <button class="btn" onclick="exportCSV()">ייצא CSV</button>
-        <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑️ מחק הכל</button>
-        <button class="btn btn-primary" onclick="loadFromFirebase()">🔄 רענן</button>
+        <button class="btn" onclick="exportCSV()">◊ô◊ô◊¶◊ê CSV</button>
+        <button class="btn btn-danger" onclick="confirmDeleteAll()">üóëÔ∏è ◊û◊ó◊ß ◊î◊õ◊ú</button>
+        <button class="btn btn-primary" onclick="loadFromFirebase()">üîÑ ◊®◊¢◊†◊ü</button>
       </div>
     </div>
   </div>
   <div class="content" id="mainContent">
-    <div class="empty"><div class="icon">🔥</div><h3>טוען נתונים מ-Firebase...</h3><p>אנא המתן</p></div>
+    <div class="empty"><div class="icon">üî•</div><h3>◊ò◊ï◊¢◊ü ◊†◊™◊ï◊†◊ô◊ù ◊û-Firebase...</h3><p>◊ê◊†◊ê ◊î◊û◊™◊ü</p></div>
   </div>
 </div>
 
 <!-- BULK SELECTION BAR -->
 <div id="bulkBar">
-  <span class="bc" id="bulkCount">נבחרו 0</span>
+  <span class="bc" id="bulkCount">◊†◊ë◊ó◊®◊ï 0</span>
   <span class="bsp"></span>
-  <button class="bdel" onclick="bulkDeleteSelected()">🗑️ מחק נבחרים</button>
-  <button class="bclr" onclick="clearSelection()">נקה בחירה</button>
+  <button class="bdel" onclick="bulkDeleteSelected()">üóëÔ∏è ◊û◊ó◊ß ◊†◊ë◊ó◊®◊ô◊ù</button>
+  <button class="bclr" onclick="clearSelection()">◊†◊ß◊î ◊ë◊ó◊ô◊®◊î</button>
 </div>
 
 <!-- DETAIL MODAL -->
 <div class="modal-bg" id="modalBg" onclick="closeModal(event)">
   <div class="modal">
     <div class="modal-head">
-      <h3 id="modalTitle">פרטי הגשה</h3>
-      <button class="close-btn" onclick="closeModalDirect()">✕</button>
+      <h3 id="modalTitle">◊§◊®◊ò◊ô ◊î◊í◊©◊î</h3>
+      <button class="close-btn" onclick="closeModalDirect()">‚úï</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-foot" id="modalFoot"></div>
@@ -179,24 +181,24 @@ tr:last-child td{border-bottom:none}
 <div class="modal-bg" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
   <div class="modal" style="max-width:420px">
     <div class="modal-head" style="background:#fff5f5">
-      <h3 style="color:#dc2626">🗑️ מחיקת בקשה</h3>
-      <button class="close-btn" onclick="closeDeleteModal()">✕</button>
+      <h3 style="color:#dc2626">üóëÔ∏è ◊û◊ó◊ô◊ß◊™ ◊ë◊ß◊©◊î</h3>
+      <button class="close-btn" onclick="closeDeleteModal()">‚úï</button>
     </div>
     <div class="modal-body" style="text-align:center;padding:2rem">
-      <div style="font-size:48px;margin-bottom:12px">⚠️</div>
-      <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:8px">האם אתה בטוח?</div>
+      <div style="font-size:48px;margin-bottom:12px">‚ö†Ô∏è</div>
+      <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:8px">◊î◊ê◊ù ◊ê◊™◊î ◊ë◊ò◊ï◊ó?</div>
       <div style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6">
-        עומד למחוק את הבקשה:<br>
+        ◊¢◊ï◊û◊ì ◊ú◊û◊ó◊ï◊ß ◊ê◊™ ◊î◊ë◊ß◊©◊î:<br>
         <strong id="deleteEvname" style="color:#1e293b"></strong><br>
         <span style="font-family:monospace;font-size:11px;color:#94a3b8" id="deleteRef"></span>
       </div>
       <div style="background:#fee2e2;border-radius:8px;padding:10px 14px;font-size:12px;color:#991b1b;margin-bottom:20px">
-        ⚠️ פעולה זו בלתי הפיכה — הנתונים יימחקו לצמיתות מ-Firebase
+        ‚ö†Ô∏è ◊§◊¢◊ï◊ú◊î ◊ñ◊ï ◊ë◊ú◊™◊ô ◊î◊§◊ô◊õ◊î ‚Äî ◊î◊†◊™◊ï◊†◊ô◊ù ◊ô◊ô◊û◊ó◊ß◊ï ◊ú◊¶◊û◊ô◊™◊ï◊™ ◊û-Firebase
       </div>
       <div style="display:flex;gap:10px;justify-content:center">
-        <button class="btn" onclick="closeDeleteModal()" style="padding:9px 22px">ביטול</button>
+        <button class="btn" onclick="closeDeleteModal()" style="padding:9px 22px">◊ë◊ô◊ò◊ï◊ú</button>
         <button id="confirmDeleteBtn" style="padding:9px 22px;background:#dc2626;color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Heebo',sans-serif">
-          🗑️ כן, מחק לצמיתות
+          üóëÔ∏è ◊õ◊ü, ◊û◊ó◊ß ◊ú◊¶◊û◊ô◊™◊ï◊™
         </button>
       </div>
     </div>
@@ -210,18 +212,18 @@ var pollingTimer = null;
 var selectedKeys = {}; // bulk-selection set: { fbKey: true }
 
 function initAdminChip() {
-  var name = (typeof MANAGER_NAME === 'string' && MANAGER_NAME.trim()) ? MANAGER_NAME.trim() : 'מנהל';
+  var name = (typeof MANAGER_NAME === 'string' && MANAGER_NAME.trim()) ? MANAGER_NAME.trim() : '◊û◊†◊î◊ú';
   var initials = name.split(/\s+/).map(function(w) { return w.charAt(0); }).slice(0, 2).join('');
   document.getElementById('adminChip').innerHTML =
     '<div class="av">' + escapeHtml(initials) + '</div>' +
-    '<div class="ai"><span class="an">' + escapeHtml(name) + '</span><span class="ar">🛡️ הרשאת ניהול</span></div>';
+    '<div class="ai"><span class="an">' + escapeHtml(name) + '</span><span class="ar">üõ°Ô∏è ◊î◊®◊©◊ê◊™ ◊†◊ô◊î◊ï◊ú</span></div>';
 }
 
 window.addEventListener('DOMContentLoaded', function() {
   initAdminChip();
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
     document.getElementById('fbDot').className = 'fb-dot';
-    document.getElementById('fbStatus').textContent = 'Firebase לא מוגדר';
+    document.getElementById('fbStatus').textContent = 'Firebase ◊ú◊ê ◊û◊ï◊í◊ì◊®';
     loadFromLocalStorage();
     return;
   }
@@ -229,9 +231,9 @@ window.addEventListener('DOMContentLoaded', function() {
   pollingTimer = setInterval(function() { loadFromFirebase(true); }, POLLING_INTERVAL);
 });
 
-/* מזהה יציב לכל הגשה: מפתח ה-Firebase האמיתי, ובמצב מקומי – האסמכתא */
+/* ◊û◊ñ◊î◊î ◊ô◊¶◊ô◊ë ◊ú◊õ◊ú ◊î◊í◊©◊î: ◊û◊§◊™◊ó ◊î-Firebase ◊î◊ê◊û◊ô◊™◊ô, ◊ï◊ë◊û◊¶◊ë ◊û◊ß◊ï◊û◊ô ‚Äì ◊î◊ê◊°◊û◊õ◊™◊ê */
 function keyOf(s) { return s._fbKey || s.ref; }
-/* מיון לפי תאריך האירוע (evstart) – מהקרוב למאוחר; ללא תאריך – לסוף */
+/* ◊û◊ô◊ï◊ü ◊ú◊§◊ô ◊™◊ê◊®◊ô◊ö ◊î◊ê◊ô◊®◊ï◊¢ (evstart) ‚Äì ◊û◊î◊ß◊®◊ï◊ë ◊ú◊û◊ê◊ï◊ó◊®; ◊ú◊ú◊ê ◊™◊ê◊®◊ô◊ö ‚Äì ◊ú◊°◊ï◊£ */
 function sortByEventDate(a, b) {
   if (!a.evstart && !b.evstart) return 0;
   if (!a.evstart) return 1;
@@ -251,7 +253,7 @@ function showToast(msg, color) {
 
 function loadFromFirebase(silent) {
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) { loadFromLocalStorage(); return; }
-  if (!silent) document.getElementById('fbStatus').textContent = 'טוען...';
+  if (!silent) document.getElementById('fbStatus').textContent = '◊ò◊ï◊¢◊ü...';
   fetch(FIREBASE_URL + '/submissions.json')
     .then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -268,18 +270,18 @@ function loadFromFirebase(silent) {
         allSubmissions.sort(sortByEventDate);
       }
       document.getElementById('fbDot').className = 'fb-dot connected';
-      document.getElementById('fbStatus').textContent = allSubmissions.length + ' הגשות';
-      document.getElementById('lastSync').textContent = 'עודכן: ' + new Date().toLocaleTimeString('he-IL');
+      document.getElementById('fbStatus').textContent = allSubmissions.length + ' ◊î◊í◊©◊ï◊™';
+      document.getElementById('lastSync').textContent = '◊¢◊ï◊ì◊õ◊ü: ' + new Date().toLocaleTimeString('he-IL');
       showView(currentView);
     })
     .catch(function(err) {
       document.getElementById('fbDot').className = 'fb-dot';
-      document.getElementById('fbStatus').textContent = 'שגיאת חיבור';
+      document.getElementById('fbStatus').textContent = '◊©◊í◊ô◊ê◊™ ◊ó◊ô◊ë◊ï◊®';
       console.error('Firebase load error:', err);
       if (!silent) {
         loadFromLocalStorage();
         document.getElementById('mainContent').insertAdjacentHTML('afterbegin',
-          '<div class="fb-banner">⚠️ לא ניתן להתחבר ל-Firebase (<code>' + err.message + '</code>). מציג נתונים מהדפדפן.</div>');
+          '<div class="fb-banner">‚ö†Ô∏è ◊ú◊ê ◊†◊ô◊™◊ü ◊ú◊î◊™◊ó◊ë◊® ◊ú-Firebase (<code>' + err.message + '</code>). ◊û◊¶◊ô◊í ◊†◊™◊ï◊†◊ô◊ù ◊û◊î◊ì◊§◊ì◊§◊ü.</div>');
       }
     });
 }
@@ -308,38 +310,44 @@ function updateInLocalStorage(key, updates) {
   localStorage.setItem('securitySubmissions', JSON.stringify(raw));
 }
 
+/* ◊î◊ë◊ó◊†◊î ◊ë◊ô◊ü ◊ê◊ô◊®◊ï◊¢ ◊ú◊§◊í◊ô◊©◊î (◊î◊í◊©◊ï◊™ ◊ô◊©◊†◊ï◊™ ◊ú◊ú◊ê formType ◊†◊ó◊©◊ë◊ï◊™ ◊õ◊ê◊ô◊®◊ï◊¢) */
+function isMeeting(s) { return s && s.formType === 'meeting'; }
+function isEvent(s) { return !isMeeting(s); }
+
 /* =========================================================
-   עזר: פורמט תאריך ושעת הגשה
+   ◊¢◊ñ◊®: ◊§◊ï◊®◊û◊ò ◊™◊ê◊®◊ô◊ö ◊ï◊©◊¢◊™ ◊î◊í◊©◊î
    ========================================================= */
 function formatSubmitDateTime(ts) {
-  if (!ts) return { date: '—', time: '' };
+  if (!ts) return { date: '‚Äî', time: '' };
   var d = new Date(ts);
-  if (isNaN(d)) return { date: '—', time: '' };
+  if (isNaN(d)) return { date: '‚Äî', time: '' };
   var date = d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   var time = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   return { date: date, time: time };
 }
 
 /* =========================================================
-   תצוגות
+   ◊™◊¶◊ï◊í◊ï◊™
    ========================================================= */
 function levelInfo(sc) {
-  if (sc <= 3) return { label: 'נמוכה', cls: 'badge-low', color: '#16a34a', fill: '#16a34a', scls: 'score-low' };
-  if (sc <= 7) return { label: 'בינונית', cls: 'badge-mid', color: '#d97706', fill: '#d97706', scls: 'score-mid' };
-  return { label: 'גבוהה', cls: 'badge-high', color: '#dc2626', fill: '#dc2626', scls: 'score-high' };
+  if (sc <= 3) return { label: '◊†◊û◊ï◊õ◊î', cls: 'badge-low', color: '#16a34a', fill: '#16a34a', scls: 'score-low' };
+  if (sc <= 7) return { label: '◊ë◊ô◊†◊ï◊†◊ô◊™', cls: 'badge-mid', color: '#d97706', fill: '#d97706', scls: 'score-mid' };
+  return { label: '◊í◊ë◊ï◊î◊î', cls: 'badge-high', color: '#dc2626', fill: '#dc2626', scls: 'score-high' };
 }
 
 function showView(v) {
   currentView = v;
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-  var idx = { dashboard: 0, all: 1, high: 2, pending: 3 }[v] || 0;
+  var idx = { dashboard: 0, all: 1, events: 2, meetings: 3, high: 4, pending: 5 }[v] || 0;
   document.querySelectorAll('.nav-item')[idx].classList.add('active');
-  var titles = { dashboard: 'דשבורד ראשי', all: 'כל ההגשות', high: 'אירועים בסיכון גבוה', pending: 'ממתינות לבדיקה' };
+  var titles = { dashboard: '◊ì◊©◊ë◊ï◊®◊ì ◊®◊ê◊©◊ô', all: '◊õ◊ú ◊î◊î◊í◊©◊ï◊™', events: '◊ê◊ô◊®◊ï◊¢◊ô◊ù', meetings: '◊§◊í◊ô◊©◊ï◊™', high: '◊ê◊ô◊®◊ï◊¢◊ô◊ù ◊ë◊°◊ô◊õ◊ï◊ü ◊í◊ë◊ï◊î', pending: '◊û◊û◊™◊ô◊†◊ï◊™ ◊ú◊ë◊ì◊ô◊ß◊î' };
   document.getElementById('pageTitle').textContent = titles[v] || v;
   if (v === 'dashboard') renderDashboard();
-  else if (v === 'all') renderTable(allSubmissions, 'כל ההגשות');
-  else if (v === 'high') renderTable(allSubmissions.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }), 'סיכון גבוה');
-  else if (v === 'pending') renderTable(allSubmissions.filter(function(s) { return !s.status || s.status === 'new'; }), 'ממתינות לבדיקה');
+  else if (v === 'all') renderTable(allSubmissions, '◊õ◊ú ◊î◊î◊í◊©◊ï◊™');
+  else if (v === 'events') renderTable(allSubmissions.filter(isEvent), '◊ê◊ô◊®◊ï◊¢◊ô◊ù');
+  else if (v === 'meetings') renderTable(allSubmissions.filter(isMeeting), '◊§◊í◊ô◊©◊ï◊™');
+  else if (v === 'high') renderTable(allSubmissions.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }), '◊°◊ô◊õ◊ï◊ü ◊í◊ë◊ï◊î');
+  else if (v === 'pending') renderTable(allSubmissions.filter(function(s) { return !s.status || s.status === 'new'; }), '◊û◊û◊™◊ô◊†◊ï◊™ ◊ú◊ë◊ì◊ô◊ß◊î');
   updateBulkBar();
 }
 
@@ -355,41 +363,47 @@ function renderDashboard() {
   var html = '';
 
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
-    html += '<div class="fb-banner">🔥 <strong>Firebase לא מוגדר.</strong> כדי לחבר בין הטופס לדשבורד:<br>';
-    html += '1. צור פרויקט ב- <strong>console.firebase.google.com</strong><br>';
-    html += '2. לך ל-Realtime Database ← Create<br>';
-    html += '3. הגדר כללי כתיבה: <code>{ "rules": { ".read": false, ".write": true } }</code><br>';
-    html += '4. העתק את ה-URL לשני הקבצים: <code>var FIREBASE_URL = \'https://...\'</code></div>';
+    html += '<div class="fb-banner">üî• <strong>Firebase ◊ú◊ê ◊û◊ï◊í◊ì◊®.</strong> ◊õ◊ì◊ô ◊ú◊ó◊ë◊® ◊ë◊ô◊ü ◊î◊ò◊ï◊§◊° ◊ú◊ì◊©◊ë◊ï◊®◊ì:<br>';
+    html += '1. ◊¶◊ï◊® ◊§◊®◊ï◊ô◊ß◊ò ◊ë- <strong>console.firebase.google.com</strong><br>';
+    html += '2. ◊ú◊ö ◊ú-Realtime Database ‚Üê Create<br>';
+    html += '3. ◊î◊í◊ì◊® ◊õ◊ú◊ú◊ô ◊õ◊™◊ô◊ë◊î: <code>{ "rules": { ".read": false, ".write": true } }</code><br>';
+    html += '4. ◊î◊¢◊™◊ß ◊ê◊™ ◊î-URL ◊ú◊©◊†◊ô ◊î◊ß◊ë◊¶◊ô◊ù: <code>var FIREBASE_URL = \'https://...\'</code></div>';
   }
 
+  var eventsCount = subs.filter(isEvent).length;
+  var meetingsCount = subs.filter(isMeeting).length;
+
   html += '<div class="stats-grid">';
-  html += stat('סה"כ הגשות', total, 'כולל כל הסטטוסים');
-  html += stat('ממתינות', pending, 'טרם טופלו', '#d97706');
-  html += stat('סיכון גבוה', high, 'ציון 8 ומעלה', '#dc2626');
-  html += stat('ציון ממוצע', avg, 'מתוך 10');
+  html += stat('◊°◊î"◊õ ◊î◊í◊©◊ï◊™', total, '◊õ◊ï◊ú◊ú ◊õ◊ú ◊î◊°◊ò◊ò◊ï◊°◊ô◊ù');
+  html += stat('◊ê◊ô◊®◊ï◊¢◊ô◊ù', eventsCount, '◊ò◊ï◊§◊° ◊û◊ú◊ê', '#1e40af');
+  html += stat('◊§◊í◊ô◊©◊ï◊™', meetingsCount, '◊ò◊ï◊§◊° ◊ß◊¶◊®', '#6d28d9');
+  html += stat('◊û◊û◊™◊ô◊†◊ï◊™', pending, '◊ò◊®◊ù ◊ò◊ï◊§◊ú◊ï', '#d97706');
+  html += stat('◊°◊ô◊õ◊ï◊ü ◊í◊ë◊ï◊î', high, '◊¶◊ô◊ï◊ü 8 ◊ï◊û◊¢◊ú◊î', '#dc2626');
+  html += stat('◊¶◊ô◊ï◊ü ◊û◊û◊ï◊¶◊¢', avg, '◊û◊™◊ï◊ö 10');
   html += '</div>';
 
   html += '<div class="chart-grid">';
-  html += '<div class="panel"><div class="panel-head"><h3>התפלגות סיכון</h3></div><div style="padding:1rem 1.25rem">';
+  html += '<div class="panel"><div class="panel-head"><h3>◊î◊™◊§◊ú◊í◊ï◊™ ◊°◊ô◊õ◊ï◊ü</h3></div><div style="padding:1rem 1.25rem">';
   var mx = Math.max(low, mid, high, 1);
-  html += miniBar('נמוכה', low, mx, '#16a34a');
-  html += miniBar('בינונית', mid, mx, '#d97706');
-  html += miniBar('גבוהה', high, mx, '#dc2626');
+  html += miniBar('◊†◊û◊ï◊õ◊î', low, mx, '#16a34a');
+  html += miniBar('◊ë◊ô◊†◊ï◊†◊ô◊™', mid, mx, '#d97706');
+  html += miniBar('◊í◊ë◊ï◊î◊î', high, mx, '#dc2626');
   html += '</div></div>';
 
-  html += '<div class="panel"><div class="panel-head"><h3>הגשות אחרונות <span class="live-dot"></span></h3></div>';
+  html += '<div class="panel"><div class="panel-head"><h3>◊î◊í◊©◊ï◊™ ◊ê◊ó◊®◊ï◊†◊ï◊™ <span class="live-dot"></span></h3></div>';
   var recent = subs.slice().sort(function(a, b) { return (b.timestamp || '').localeCompare(a.timestamp || ''); }).slice(0, 5);
   if (!recent.length) {
-    html += '<div style="padding:1rem;font-size:12px;color:var(--muted)">אין הגשות עדיין</div>';
+    html += '<div style="padding:1rem;font-size:12px;color:var(--muted)">◊ê◊ô◊ü ◊î◊í◊©◊ï◊™ ◊¢◊ì◊ô◊ô◊ü</div>';
   } else {
-    html += '<table><thead><tr><th>אירוע</th><th>הוגש</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
+    html += '<table><thead><tr><th>◊ê◊ô◊®◊ï◊¢ / ◊§◊í◊ô◊©◊î</th><th>◊î◊ï◊í◊©</th><th>◊¶◊ô◊ï◊ü</th><th>◊°◊ò◊ò◊ï◊°</th></tr></thead><tbody>';
     recent.forEach(function(s) {
       var sc = s.manualScore || s.score || 0;
       var li = levelInfo(sc);
       var st = s.status || 'new';
       var dt = formatSubmitDateTime(s.timestamp);
+      var rName = isMeeting(s) ? ('ü§ù ' + (s.meetPersonName || '◊§◊í◊ô◊©◊î')) : ('üìÖ ' + (s.evname || '‚Äî'));
       html += '<tr>';
-      html += '<td style="font-weight:500">' + (s.evname || '—') + '</td>';
+      html += '<td style="font-weight:500">' + rName + '</td>';
       html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
       html += '<td><span class="' + li.scls + '" style="font-weight:700">' + sc + '</span></td>';
       html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
@@ -400,7 +414,7 @@ function renderDashboard() {
   html += '</div></div>';
 
   if (subs.length) {
-    html += '<div class="panel"><div class="panel-head"><h3>רשימת הגשות</h3></div>';
+    html += '<div class="panel"><div class="panel-head"><h3>◊®◊©◊ô◊û◊™ ◊î◊í◊©◊ï◊™</h3></div>';
     html += buildTableHTML(subs.slice(0, 15));
     html += '</div>';
   }
@@ -414,14 +428,14 @@ function stat(label, val, sub, color) {
 function miniBar(label, count, max, color) {
   return '<div class="mini-bar"><span class="ml">' + label + '</span><div class="mt"><div class="mf" style="width:' + Math.round(count / max * 100) + '%;background:' + color + '"></div></div><span class="mv">' + count + '</span></div>';
 }
-function statusLabel(st) { return { new: 'חדש', reviewed: 'נבדק', approved: 'אושר', pending: 'ממתין', rejected: 'נדחה' }[st] || st; }
+function statusLabel(st) { return { new: '◊ó◊ì◊©', reviewed: '◊†◊ë◊ì◊ß', approved: '◊ê◊ï◊©◊®', pending: '◊û◊û◊™◊ô◊ü', rejected: '◊†◊ì◊ó◊î' }[st] || st; }
 
 function renderTable(list, title) {
   var html = '<div class="panel">';
   html += '<div class="panel-head"><h3>' + title + ' (' + list.length + ')</h3></div>';
-  html += '<div class="filter-row"><input type="text" placeholder="חיפוש לפי שם אירוע, ארגון, מ. זיהוי..." oninput="filterTable(this.value)" id="searchInput">';
-  html += '<select onchange="filterByLevel(this.value)" id="levelFilter"><option value="">כל הרמות</option><option value="low">נמוכה</option><option value="mid">בינונית</option><option value="high">גבוהה</option></select>';
-  html += '<select onchange="filterByStatus(this.value)" id="statusFilter"><option value="">כל הסטטוסים</option><option value="new">חדש</option><option value="reviewed">נבדק</option><option value="approved">אושר</option><option value="pending">ממתין</option><option value="rejected">נדחה</option></select>';
+  html += '<div class="filter-row"><input type="text" placeholder="◊ó◊ô◊§◊ï◊© ◊ú◊§◊ô ◊©◊ù ◊ê◊ô◊®◊ï◊¢, ◊ê◊®◊í◊ï◊ü, ◊û. ◊ñ◊ô◊î◊ï◊ô..." oninput="filterTable(this.value)" id="searchInput">';
+  html += '<select onchange="filterByLevel(this.value)" id="levelFilter"><option value="">◊õ◊ú ◊î◊®◊û◊ï◊™</option><option value="low">◊†◊û◊ï◊õ◊î</option><option value="mid">◊ë◊ô◊†◊ï◊†◊ô◊™</option><option value="high">◊í◊ë◊ï◊î◊î</option></select>';
+  html += '<select onchange="filterByStatus(this.value)" id="statusFilter"><option value="">◊õ◊ú ◊î◊°◊ò◊ò◊ï◊°◊ô◊ù</option><option value="new">◊ó◊ì◊©</option><option value="reviewed">◊†◊ë◊ì◊ß</option><option value="approved">◊ê◊ï◊©◊®</option><option value="pending">◊û◊û◊™◊ô◊ü</option><option value="rejected">◊†◊ì◊ó◊î</option></select>';
   html += '</div>';
   html += buildTableHTML(list);
   html += '</div>';
@@ -429,10 +443,10 @@ function renderTable(list, title) {
 }
 
 function buildTableHTML(list) {
-  if (!list.length) return '<div class="empty"><div class="icon">📭</div><h3>אין הגשות</h3><p>טפסים שיוגשו יופיעו כאן</p></div>';
+  if (!list.length) return '<div class="empty"><div class="icon">üì≠</div><h3>◊ê◊ô◊ü ◊î◊í◊©◊ï◊™</h3><p>◊ò◊§◊°◊ô◊ù ◊©◊ô◊ï◊í◊©◊ï ◊ô◊ï◊§◊ô◊¢◊ï ◊õ◊ê◊ü</p></div>';
   var html = '<div class="tbl-wrap"><table><thead><tr>';
-  html += '<th class="chk-col"><input type="checkbox" onclick="toggleSelectAll(this)" title="בחר הכל"></th>';
-  html += '<th>מ. זיהוי</th><th>בחסות</th><th>שם האירוע</th><th>תאריך אירוע</th><th>הוגש ב</th><th>ציון</th><th>רמה</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>';
+  html += '<th class="chk-col"><input type="checkbox" onclick="toggleSelectAll(this)" title="◊ë◊ó◊® ◊î◊õ◊ú"></th>';
+  html += '<th>◊û. ◊ñ◊ô◊î◊ï◊ô</th><th>◊°◊ï◊í</th><th>◊ë◊ó◊°◊ï◊™ / ◊©◊ù</th><th>◊ê◊ô◊®◊ï◊¢ / ◊ê◊ì◊ù</th><th>◊™◊ê◊®◊ô◊ö ◊ê◊ô◊®◊ï◊¢</th><th>◊î◊ï◊í◊© ◊ë</th><th>◊¶◊ô◊ï◊ü</th><th>◊®◊û◊î</th><th>◊°◊ò◊ò◊ï◊°</th><th>◊§◊¢◊ï◊ú◊ï◊™</th></tr></thead><tbody>';
   list.forEach(function(s) {
     var key = keyOf(s);
     var sc = s.manualScore || s.score || 0;
@@ -440,19 +454,27 @@ function buildTableHTML(list) {
     var st = s.status || 'new';
     var dt = formatSubmitDateTime(s.timestamp);
     var checked = selectedKeys[key] ? ' checked' : '';
+    var meeting = isMeeting(s);
+    var typeBadge = meeting
+      ? '<span class="badge" style="background:#ede9fe;color:#6d28d9">ü§ù ◊§◊í◊ô◊©◊î</span>'
+      : '<span class="badge" style="background:#dbeafe;color:#1e40af">üìÖ ◊ê◊ô◊®◊ï◊¢</span>';
+    var nameCol = meeting ? (s.meetPersonName || '‚Äî') : (s.org || '‚Äî');
+    var titleCol = meeting ? (s.meetPersonRole || '‚Äî') : (s.evname || '‚Äî');
+    var dateCol = meeting ? '‚Äî' : (s.evstart || '‚Äî');
     html += '<tr>';
     html += '<td class="chk-col"><input type="checkbox" class="rowChk" data-key="' + escapeHtml(key) + '" onchange="toggleRow(\'' + key + '\',this.checked)"' + checked + '></td>';
-    html += '<td style="font-weight:600;color:var(--navy2)">' + (s.personalid || '—') + '</td>';
-    html += '<td>' + (s.org || '—') + '</td>';
-    html += '<td style="font-weight:500">' + (s.evname || '—') + '</td>';
-    html += '<td style="color:var(--muted)">' + (s.evstart || '—') + '</td>';
+    html += '<td style="font-weight:600;color:var(--navy2)">' + (s.personalid || '‚Äî') + '</td>';
+    html += '<td>' + typeBadge + '</td>';
+    html += '<td>' + nameCol + '</td>';
+    html += '<td style="font-weight:500">' + titleCol + '</td>';
+    html += '<td style="color:var(--muted)">' + dateCol + '</td>';
     html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
     html += '<td><span class="score-num ' + li.scls + '">' + sc + '</span></td>';
     html += '<td><span class="badge ' + li.cls + '">' + li.label + '</span></td>';
     html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
     html += '<td style="white-space:nowrap">';
-    html += '<button class="act-btn" title="צפה / דרג" onclick="openDetail(\'' + key + '\')">📋</button>';
-    html += '<button class="act-btn" style="color:#dc2626;border-color:#fca5a5" title="מחק" onclick="confirmDelete(\'' + key + '\')">🗑️</button>';
+    html += '<button class="act-btn" title="◊¶◊§◊î / ◊ì◊®◊í" onclick="openDetail(\'' + key + '\')">üìã</button>';
+    html += '<button class="act-btn" style="color:#dc2626;border-color:#fca5a5" title="◊û◊ó◊ß" onclick="confirmDelete(\'' + key + '\')">üóëÔ∏è</button>';
     html += '</td></tr>';
   });
   html += '</tbody></table></div>';
@@ -486,7 +508,7 @@ function getBaseList() {
 }
 
 /* =========================================================
-   בחירה מרובה למחיקה
+   ◊ë◊ó◊ô◊®◊î ◊û◊®◊ï◊ë◊î ◊ú◊û◊ó◊ô◊ß◊î
    ========================================================= */
 function toggleRow(key, checked) {
   if (checked) selectedKeys[key] = true; else delete selectedKeys[key];
@@ -509,26 +531,26 @@ function clearSelection() {
 function updateBulkBar() {
   var n = Object.keys(selectedKeys).length;
   var bar = document.getElementById('bulkBar');
-  document.getElementById('bulkCount').textContent = 'נבחרו ' + n + ' הגשות';
+  document.getElementById('bulkCount').textContent = '◊†◊ë◊ó◊®◊ï ' + n + ' ◊î◊í◊©◊ï◊™';
   if (n > 0) bar.classList.add('show'); else bar.classList.remove('show');
 }
 function bulkDeleteSelected() {
   var keys = Object.keys(selectedKeys);
   if (!keys.length) return;
-  if (!confirm('⚠️ למחוק ' + keys.length + ' הגשות שנבחרו? פעולה זו בלתי הפיכה!')) return;
+  if (!confirm('‚ö†Ô∏è ◊ú◊û◊ó◊ï◊ß ' + keys.length + ' ◊î◊í◊©◊ï◊™ ◊©◊†◊ë◊ó◊®◊ï? ◊§◊¢◊ï◊ú◊î ◊ñ◊ï ◊ë◊ú◊™◊ô ◊î◊§◊ô◊õ◊î!')) return;
   Promise.all(keys.map(function(k) { return deleteFromFirebase(k); }))
     .then(function() {
       allSubmissions = allSubmissions.filter(function(s) { return !selectedKeys[keyOf(s)]; });
       var count = keys.length;
       selectedKeys = {};
       showView(currentView);
-      showToast('🗑️ נמחקו ' + count + ' הגשות', '#dc2626');
+      showToast('üóëÔ∏è ◊†◊û◊ó◊ß◊ï ' + count + ' ◊î◊í◊©◊ï◊™', '#dc2626');
     })
-    .catch(function(err) { alert('שגיאה במחיקה מרובה: ' + err.message); });
+    .catch(function(err) { alert('◊©◊í◊ô◊ê◊î ◊ë◊û◊ó◊ô◊ß◊î ◊û◊®◊ï◊ë◊î: ' + err.message); });
 }
 
 /* =========================================================
-   מודל פרטים + עריכה
+   ◊û◊ï◊ì◊ú ◊§◊®◊ò◊ô◊ù + ◊¢◊®◊ô◊õ◊î
    ========================================================= */
 function openDetail(key) {
   var s = findByKey(key);
@@ -540,116 +562,130 @@ function openDetail(key) {
 
   var html = '<div class="score-big">';
   html += '<div style="font-size:44px;font-weight:700;color:' + li.color + '">' + sc + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted)">מתוך 10</div>';
+  html += '<div style="font-size:11px;color:var(--muted)">◊û◊™◊ï◊ö 10</div>';
   html += '<div class="gauge"><div class="gauge-fill" style="width:' + pct + '%;background:' + li.fill + '"></div></div>';
-  html += '<span class="badge ' + li.cls + '" style="font-size:13px">רמת אבטחה: ' + li.label + '</span>';
-  if (dt.date !== '—') {
-    html += '<div style="margin-top:8px;font-size:11px;color:var(--muted)">הוגש ב: <strong style="color:var(--text)">' + dt.date + ' בשעה ' + dt.time + '</strong></div>';
+  html += '<span class="badge ' + li.cls + '" style="font-size:13px">◊®◊û◊™ ◊ê◊ë◊ò◊ó◊î: ' + li.label + '</span>';
+  if (dt.date !== '‚Äî') {
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--muted)">◊î◊ï◊í◊© ◊ë: <strong style="color:var(--text)">' + dt.date + ' ◊ë◊©◊¢◊î ' + dt.time + '</strong></div>';
   }
   html += '</div>';
 
   function dtRow(l, v) {
-    var d = v || '—';
-    if (v === 'כן') d = '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">כן</span>';
-    else if (v === 'לא') d = '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:11px">לא</span>';
+    var d = v || '‚Äî';
+    if (v === '◊õ◊ü') d = '<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">◊õ◊ü</span>';
+    else if (v === '◊ú◊ê') d = '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:11px">◊ú◊ê</span>';
     return '<div class="dt"><span class="dl">' + l + '</span><span class="dv">' + d + '</span></div>';
   }
 
-  html += '<div class="ds-title">פרטי ארגון ואיש קשר</div>';
-  html += dtRow('בחסות', s.org);
-  html += dtRow('מספר זיהוי אישי', s.personalid);
-  html += dtRow('מארגן ידוע ומוכר', s.orgknown);
-  if (s.orgknown_detail) html += dtRow('פירוט מארגן', s.orgknown_detail);
-  html += dtRow('איש קשר', (s.fname || '') + ' ' + (s.lname || ''));
-  html += dtRow('אימייל', s.email);
-  html += dtRow('טלפון', s.phone);
+  if (isMeeting(s)) {
+    html += '<div class="ds-title">◊§◊®◊ò◊ô ◊î◊§◊í◊ô◊©◊î</div>';
+    html += dtRow('◊û◊°◊§◊® ◊ñ◊ô◊î◊ï◊ô ◊ê◊ô◊©◊ô', s.personalid);
+    html += dtRow('◊©◊ù ◊î◊ê◊ì◊ù', s.meetPersonName);
+    html += dtRow('◊™◊§◊ß◊ô◊ì ◊î◊ê◊ì◊ù', s.meetPersonRole);
+    html += dtRow('◊®◊û◊™ ◊î◊ô◊õ◊®◊ï◊™', s.meetAcq);
+    if (s.meetAcqBy) html += dtRow('◊û◊ï◊õ◊® ◊ï◊û◊î◊ô◊û◊ü ◊¢◊ú ◊ô◊ì◊ô', s.meetAcqBy);
+    html += dtRow('◊õ◊™◊ï◊ë◊™ ◊î◊§◊í◊ô◊©◊î', s.meetAddress);
+    html += dtRow('◊û◊ô◊ß◊ï◊ù ◊î◊§◊í◊ô◊©◊î', s.meetLocType === '◊ê◊ó◊®' ? (s.meetLocOther || '◊ê◊ó◊®') : (s.meetLocType || '‚Äî'));
+    if (s.meetNotes) {
+      html += '<div class="ds-title">◊î◊¢◊®◊ï◊™ ◊ú◊í◊ë◊ô ◊î◊ê◊ì◊ù</div><div style="font-size:13px;line-height:1.6">' + escapeHtml(s.meetNotes) + '</div>';
+    }
+  } else {
+    html += '<div class="ds-title">◊§◊®◊ò◊ô ◊ê◊®◊í◊ï◊ü ◊ï◊ê◊ô◊© ◊ß◊©◊®</div>';
+    html += dtRow('◊ë◊ó◊°◊ï◊™', s.org);
+    html += dtRow('◊û◊°◊§◊® ◊ñ◊ô◊î◊ï◊ô ◊ê◊ô◊©◊ô', s.personalid);
+    html += dtRow('◊û◊ê◊®◊í◊ü ◊ô◊ì◊ï◊¢ ◊ï◊û◊ï◊õ◊®', s.orgknown);
+    if (s.orgknown_detail) html += dtRow('◊§◊ô◊®◊ï◊ò ◊û◊ê◊®◊í◊ü', s.orgknown_detail);
+    html += dtRow('◊ê◊ô◊© ◊ß◊©◊®', (s.fname || '') + ' ' + (s.lname || ''));
+    html += dtRow('◊ê◊ô◊û◊ô◊ô◊ú', s.email);
+    html += dtRow('◊ò◊ú◊§◊ï◊ü', s.phone);
 
-  html += '<div class="ds-title">פרטי האירוע</div>';
-  html += dtRow('שם האירוע', s.evname);
-  html += dtRow('תאריכים', (s.evstart || '') + (s.evend && s.evend !== s.evstart ? ' — ' + s.evend : ''));
-  html += dtRow('מיקום', s.venue);
-  html += dtRow('קטגוריה', s.evcat);
-  if (s.invitelink) html += dtRow('קישור הזמנה', s.invitelink);
-  html += dtRow('קהילה יהודית', s.jewishcommunity);
-  html += dtRow('אירוע חוזר', { weekly: 'שבועי', monthly: 'חודשי', yearly: 'שנתי', no: 'לא' }[s.recurring] || s.recurring || '—');
-  html += dtRow('סוג כניסה', { invite: 'בהזמנה', community: 'קהילתי', ticketed: 'כרטיסים', open: 'פתוח לציבור', other: s.entrytype_other || 'אחר', unknown: 'לא יודע' }[s.entrytype] || s.entrytype || '—');
+    html += '<div class="ds-title">◊§◊®◊ò◊ô ◊î◊ê◊ô◊®◊ï◊¢</div>';
+    html += dtRow('◊©◊ù ◊î◊ê◊ô◊®◊ï◊¢', s.evname);
+    html += dtRow('◊™◊ê◊®◊ô◊õ◊ô◊ù', (s.evstart || '') + (s.evend && s.evend !== s.evstart ? ' ‚Äî ' + s.evend : ''));
+    html += dtRow('◊û◊ô◊ß◊ï◊ù', s.venue);
+    html += dtRow('◊ß◊ò◊í◊ï◊®◊ô◊î', s.evcat);
+    if (s.invitelink) html += dtRow('◊ß◊ô◊©◊ï◊® ◊î◊ñ◊û◊†◊î', s.invitelink);
+    html += dtRow('◊ß◊î◊ô◊ú◊î ◊ô◊î◊ï◊ì◊ô◊™', s.jewishcommunity);
+    html += dtRow('◊ê◊ô◊®◊ï◊¢ ◊ó◊ï◊ñ◊®', { weekly: '◊©◊ë◊ï◊¢◊ô', monthly: '◊ó◊ï◊ì◊©◊ô', yearly: '◊©◊†◊™◊ô', no: '◊ú◊ê' }[s.recurring] || s.recurring || '‚Äî');
+    html += dtRow('◊°◊ï◊í ◊õ◊†◊ô◊°◊î', { invite: '◊ë◊î◊ñ◊û◊†◊î', community: '◊ß◊î◊ô◊ú◊™◊ô', ticketed: '◊õ◊®◊ò◊ô◊°◊ô◊ù', open: '◊§◊™◊ï◊ó ◊ú◊¶◊ô◊ë◊ï◊®', other: s.entrytype_other || '◊ê◊ó◊®', unknown: '◊ú◊ê ◊ô◊ï◊ì◊¢' }[s.entrytype] || s.entrytype || '‚Äî');
 
-  html += '<div class="ds-title">גורמי סיכון</div>';
-  html += dtRow('במוסד ממשלתי', s.govprox);
-  html += dtRow('כניסה פתוחה', s.entrytype === 'open' ? 'כן' : 'לא');
-  html += dtRow('אישים בכירים', s.vip);
-  if (s.vip_detail) html += dtRow('פירוט VIP', s.vip_detail);
-  html += dtRow('הפגנות', s.protest);
-  html += dtRow('תפקיד באירוע', s.eventrole === 'אחר' ? (s.eventrole_other || 'אחר') : (s.eventrole || '—'));
+    html += '<div class="ds-title">◊í◊ï◊®◊û◊ô ◊°◊ô◊õ◊ï◊ü</div>';
+    html += dtRow('◊ë◊û◊ï◊°◊ì ◊û◊û◊©◊ú◊™◊ô', s.govprox);
+    html += dtRow('◊õ◊†◊ô◊°◊î ◊§◊™◊ï◊ó◊î', s.entrytype === 'open' ? '◊õ◊ü' : '◊ú◊ê');
+    html += dtRow('◊ê◊ô◊©◊ô◊ù ◊ë◊õ◊ô◊®◊ô◊ù', s.vip);
+    if (s.vip_detail) html += dtRow('◊§◊ô◊®◊ï◊ò VIP', s.vip_detail);
+    html += dtRow('◊î◊§◊í◊†◊ï◊™', s.protest);
+    html += dtRow('◊™◊§◊ß◊ô◊ì ◊ë◊ê◊ô◊®◊ï◊¢', s.eventrole === '◊ê◊ó◊®' ? (s.eventrole_other || '◊ê◊ó◊®') : (s.eventrole || '‚Äî'));
 
-  if (s.extra) {
-    html += '<div class="ds-title">מידע נוסף</div><div style="font-size:13px;line-height:1.6">' + s.extra + '</div>';
+    if (s.extra) {
+      html += '<div class="ds-title">◊û◊ô◊ì◊¢ ◊†◊ï◊°◊£</div><div style="font-size:13px;line-height:1.6">' + s.extra + '</div>';
+    }
+
+    // ---- ◊™◊ì◊®◊ô◊ö ◊î◊™◊†◊î◊í◊ï◊™ ◊û◊ï◊†◊¢◊™ (◊ê◊ô◊®◊ï◊¢◊ô◊ù ◊ë◊ú◊ë◊ì) ----
+    html += '<div class="manual-section">';
+    html += '<div class="ds-title" style="margin-top:0">üìã ◊™◊ì◊®◊ô◊ö ◊î◊™◊†◊î◊í◊ï◊™ ◊û◊ï◊†◊¢◊™</div>';
+    html += '<label>◊ì◊®◊ö ◊î◊í◊¢◊î</label>';
+    html += '<select class="sel-status" id="mArrival" onchange="regenBrief(\'' + key + '\')">';
+    html += '<option value="car">◊®◊õ◊ë ◊§◊®◊ò◊ô</option>';
+    html += '<option value="taxi">◊û◊ï◊†◊ô◊ï◊™</option>';
+    html += '<option value="public">◊®◊õ◊ë◊™ ◊ï◊™◊ó◊ë◊ï◊®◊î ◊¶◊ô◊ë◊ï◊®◊ô◊™</option>';
+    html += '<option value="all" selected>◊ú◊ê ◊ô◊ì◊ï◊¢ / ◊î◊¶◊í ◊î◊õ◊ú</option>';
+    html += '</select>';
+    html += '<label>◊™◊ï◊õ◊ü ◊î◊™◊ì◊®◊ô◊ö (◊†◊ô◊™◊ü ◊ú◊¢◊®◊ô◊õ◊î ◊ú◊§◊ô ◊î◊ê◊ô◊®◊ï◊¢)</label>';
+    html += '<textarea class="brief-area" id="mBrief">' + escapeHtml(buildBriefing(s, 'all')) + '</textarea>';
+    html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
+    html += '<button class="btn btn-primary" type="button" onclick="copyBrief()">üìã ◊î◊¢◊™◊ß ◊™◊ì◊®◊ô◊ö</button>';
+    html += '<button class="btn" type="button" style="background:#dcfce7;color:#15803d;border-color:#86efac" onclick="waBrief(\'' + key + '\')">üí¨ ◊©◊ú◊ó ◊ë◊ï◊ï◊ê◊ò◊°◊ê◊§</button>';
+    html += '</div>';
+    html += '</div>';
   }
 
-  // ---- תדריך התנהגות מונעת ----
+  // ---- ◊ì◊ô◊®◊ï◊í ◊ô◊ì◊†◊ô ----
   html += '<div class="manual-section">';
-  html += '<div class="ds-title" style="margin-top:0">📋 תדריך התנהגות מונעת</div>';
-  html += '<label>דרך הגעה</label>';
-  html += '<select class="sel-status" id="mArrival" onchange="regenBrief(\'' + key + '\')">';
-  html += '<option value="car">רכב פרטי</option>';
-  html += '<option value="taxi">מוניות</option>';
-  html += '<option value="public">רכבת ותחבורה ציבורית</option>';
-  html += '<option value="all" selected>לא ידוע / הצג הכל</option>';
-  html += '</select>';
-  html += '<label>תוכן התדריך (ניתן לעריכה לפי האירוע)</label>';
-  html += '<textarea class="brief-area" id="mBrief">' + escapeHtml(buildBriefing(s, 'all')) + '</textarea>';
-  html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
-  html += '<button class="btn btn-primary" type="button" onclick="copyBrief()">📋 העתק תדריך</button>';
-  html += '<button class="btn" type="button" style="background:#dcfce7;color:#15803d;border-color:#86efac" onclick="waBrief(\'' + key + '\')">💬 שלח בוואטסאפ</button>';
-  html += '</div>';
-  html += '</div>';
-
-  // ---- דירוג ידני ----
-  html += '<div class="manual-section">';
-  html += '<div class="ds-title" style="margin-top:0">✏️ דירוג ידני</div>';
-  html += '<label>שנה ציון (0-10)</label>';
+  html += '<div class="ds-title" style="margin-top:0">‚úèÔ∏è ◊ì◊ô◊®◊ï◊í ◊ô◊ì◊†◊ô</div>';
+  html += '<label>◊©◊†◊î ◊¶◊ô◊ï◊ü (0-10)</label>';
   html += '<div class="range-row"><input type="range" min="0" max="10" value="' + sc + '" id="mRange" oninput="document.getElementById(\'mNum\').value=this.value"><input type="number" min="0" max="10" value="' + sc + '" id="mNum" oninput="document.getElementById(\'mRange\').value=this.value"></div>';
-  html += '<label>סטטוס</label>';
+  html += '<label>◊°◊ò◊ò◊ï◊°</label>';
   html += '<select class="sel-status" id="mStatus">';
-  html += '<option value="new"' + (s.status === 'new' ? ' selected' : '') + '>חדש</option>';
-  html += '<option value="reviewed"' + (s.status === 'reviewed' ? ' selected' : '') + '>נבדק</option>';
-  html += '<option value="approved"' + (s.status === 'approved' ? ' selected' : '') + '>אושר</option>';
-  html += '<option value="pending"' + (s.status === 'pending' ? ' selected' : '') + '>ממתין למידע</option>';
-  html += '<option value="rejected"' + (s.status === 'rejected' ? ' selected' : '') + '>נדחה</option>';
+  html += '<option value="new"' + (s.status === 'new' ? ' selected' : '') + '>◊ó◊ì◊©</option>';
+  html += '<option value="reviewed"' + (s.status === 'reviewed' ? ' selected' : '') + '>◊†◊ë◊ì◊ß</option>';
+  html += '<option value="approved"' + (s.status === 'approved' ? ' selected' : '') + '>◊ê◊ï◊©◊®</option>';
+  html += '<option value="pending"' + (s.status === 'pending' ? ' selected' : '') + '>◊û◊û◊™◊ô◊ü ◊ú◊û◊ô◊ì◊¢</option>';
+  html += '<option value="rejected"' + (s.status === 'rejected' ? ' selected' : '') + '>◊†◊ì◊ó◊î</option>';
   html += '</select>';
-  html += '<label>הערות פנימיות</label>';
-  html += '<textarea class="notes-area" id="mNotes" placeholder="הוסף הערות פנימיות...">' + escapeHtml(s.notes || '') + '</textarea>';
+  html += '<label>◊î◊¢◊®◊ï◊™ ◊§◊†◊ô◊û◊ô◊ï◊™</label>';
+  html += '<textarea class="notes-area" id="mNotes" placeholder="◊î◊ï◊°◊£ ◊î◊¢◊®◊ï◊™ ◊§◊†◊ô◊û◊ô◊ï◊™...">' + escapeHtml(s.notes || '') + '</textarea>';
   html += '</div>';
 
-  document.getElementById('modalTitle').textContent = s.evname || 'פרטי הגשה';
+  document.getElementById('modalTitle').textContent = (isMeeting(s) ? (s.meetPersonName ? '◊§◊í◊ô◊©◊î: ' + s.meetPersonName : '◊§◊®◊ò◊ô ◊§◊í◊ô◊©◊î') : (s.evname || '◊§◊®◊ò◊ô ◊î◊í◊©◊î'));
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalFoot').innerHTML =
-    '<button class="btn" onclick="closeModalDirect()">סגור</button>' +
-    '<button class="btn btn-primary" onclick="saveDetail(\'' + key + '\')">💾 שמור ב-Firebase</button>';
+    '<button class="btn" onclick="closeModalDirect()">◊°◊í◊ï◊®</button>' +
+    '<button class="btn btn-primary" onclick="saveDetail(\'' + key + '\')">üíæ ◊©◊û◊ï◊® ◊ë-Firebase</button>';
   document.getElementById('modalBg').classList.add('show');
 }
 
 /* =========================================================
-   בניית תדריך התנהגות מונעת
+   ◊ë◊†◊ô◊ô◊™ ◊™◊ì◊®◊ô◊ö ◊î◊™◊†◊î◊í◊ï◊™ ◊û◊ï◊†◊¢◊™
    ========================================================= */
 function transportBlock(mode) {
   var car =
-    'רכב פרטי\n' +
-    '• יש להימנע מחניה באזורים מבודדים או חשוכים.\n' +
-    '• יש להעדיף חניה בחניון מוכר ומאובטח.\n' +
-    '• טרם העלייה לרכב, יש לבצע סריקה ויזואלית קצרה של סביבת הרכב והרכב עצמו.\n' +
-    '• במקרה של סימני פריצה, חפץ חשוד או חריגה אחרת – אין להתקרב לרכב ויש לדווח.';
+    '◊®◊õ◊ë ◊§◊®◊ò◊ô\n' +
+    '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊û◊†◊¢ ◊û◊ó◊†◊ô◊î ◊ë◊ê◊ñ◊ï◊®◊ô◊ù ◊û◊ë◊ï◊ì◊ì◊ô◊ù ◊ê◊ï ◊ó◊©◊ï◊õ◊ô◊ù.\n' +
+    '‚Ä¢ ◊ô◊© ◊ú◊î◊¢◊ì◊ô◊£ ◊ó◊†◊ô◊î ◊ë◊ó◊†◊ô◊ï◊ü ◊û◊ï◊õ◊® ◊ï◊û◊ê◊ï◊ë◊ò◊ó.\n' +
+    '‚Ä¢ ◊ò◊®◊ù ◊î◊¢◊ú◊ô◊ô◊î ◊ú◊®◊õ◊ë, ◊ô◊© ◊ú◊ë◊¶◊¢ ◊°◊®◊ô◊ß◊î ◊ï◊ô◊ñ◊ï◊ê◊ú◊ô◊™ ◊ß◊¶◊®◊î ◊©◊ú ◊°◊ë◊ô◊ë◊™ ◊î◊®◊õ◊ë ◊ï◊î◊®◊õ◊ë ◊¢◊¶◊û◊ï.\n' +
+    '‚Ä¢ ◊ë◊û◊ß◊®◊î ◊©◊ú ◊°◊ô◊û◊†◊ô ◊§◊®◊ô◊¶◊î, ◊ó◊§◊• ◊ó◊©◊ï◊ì ◊ê◊ï ◊ó◊®◊ô◊í◊î ◊ê◊ó◊®◊™ ‚Äì ◊ê◊ô◊ü ◊ú◊î◊™◊ß◊®◊ë ◊ú◊®◊õ◊ë ◊ï◊ô◊© ◊ú◊ì◊ï◊ï◊ó.';
   var taxi =
-    'מוניות\n' +
-    '• ככלל, קיימת עדיפות לשימוש בשירותי CABS מורשים ומוזמנים מראש.\n' +
-    '• יש להימנע משיחות מיותרות עם נהג המונית.\n' +
-    '• אין למסור מידע על האירוע, מטרת ההגעה או השתייכות לגורמים ישראליים/יהודיים.\n' +
-    '• אין לחשוף פרטים אישיים או מקצועיים שאינם נדרשים.';
+    '◊û◊ï◊†◊ô◊ï◊™\n' +
+    '‚Ä¢ ◊õ◊õ◊ú◊ú, ◊ß◊ô◊ô◊û◊™ ◊¢◊ì◊ô◊§◊ï◊™ ◊ú◊©◊ô◊û◊ï◊© ◊ë◊©◊ô◊®◊ï◊™◊ô CABS ◊û◊ï◊®◊©◊ô◊ù ◊ï◊û◊ï◊ñ◊û◊†◊ô◊ù ◊û◊®◊ê◊©.\n' +
+    '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊û◊†◊¢ ◊û◊©◊ô◊ó◊ï◊™ ◊û◊ô◊ï◊™◊®◊ï◊™ ◊¢◊ù ◊†◊î◊í ◊î◊û◊ï◊†◊ô◊™.\n' +
+    '‚Ä¢ ◊ê◊ô◊ü ◊ú◊û◊°◊ï◊® ◊û◊ô◊ì◊¢ ◊¢◊ú ◊î◊ê◊ô◊®◊ï◊¢, ◊û◊ò◊®◊™ ◊î◊î◊í◊¢◊î ◊ê◊ï ◊î◊©◊™◊ô◊ô◊õ◊ï◊™ ◊ú◊í◊ï◊®◊û◊ô◊ù ◊ô◊©◊®◊ê◊ú◊ô◊ô◊ù/◊ô◊î◊ï◊ì◊ô◊ô◊ù.\n' +
+    '‚Ä¢ ◊ê◊ô◊ü ◊ú◊ó◊©◊ï◊£ ◊§◊®◊ò◊ô◊ù ◊ê◊ô◊©◊ô◊ô◊ù ◊ê◊ï ◊û◊ß◊¶◊ï◊¢◊ô◊ô◊ù ◊©◊ê◊ô◊†◊ù ◊†◊ì◊®◊©◊ô◊ù.';
   var pub =
-    'רכבת ותחבורה ציבורית\n' +
-    '• יש להימנע מאינטראקציה מיותרת עם זרים.\n' +
-    '• יש לשמור מרחק מאנשים המעוררים חשד או מתנהגים באופן חריג.\n' +
-    '• יש לשמור על ערנות לסביבה לאורך הנסיעה.';
+    '◊®◊õ◊ë◊™ ◊ï◊™◊ó◊ë◊ï◊®◊î ◊¶◊ô◊ë◊ï◊®◊ô◊™\n' +
+    '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊û◊†◊¢ ◊û◊ê◊ô◊†◊ò◊®◊ê◊ß◊¶◊ô◊î ◊û◊ô◊ï◊™◊®◊™ ◊¢◊ù ◊ñ◊®◊ô◊ù.\n' +
+    '‚Ä¢ ◊ô◊© ◊ú◊©◊û◊ï◊® ◊û◊®◊ó◊ß ◊û◊ê◊†◊©◊ô◊ù ◊î◊û◊¢◊ï◊®◊®◊ô◊ù ◊ó◊©◊ì ◊ê◊ï ◊û◊™◊†◊î◊í◊ô◊ù ◊ë◊ê◊ï◊§◊ü ◊ó◊®◊ô◊í.\n' +
+    '‚Ä¢ ◊ô◊© ◊ú◊©◊û◊ï◊® ◊¢◊ú ◊¢◊®◊†◊ï◊™ ◊ú◊°◊ë◊ô◊ë◊î ◊ú◊ê◊ï◊®◊ö ◊î◊†◊°◊ô◊¢◊î.';
   if (mode === 'car') return car;
   if (mode === 'taxi') return taxi;
   if (mode === 'public') return pub;
@@ -658,45 +694,45 @@ function transportBlock(mode) {
 
 function buildBriefing(s, mode) {
   var name = (s && s.evname) ? s.evname : '________';
-  var date = (s && s.evstart) ? s.evstart + (s.evend && s.evend !== s.evstart ? ' — ' + s.evend : '') : '________';
+  var date = (s && s.evstart) ? s.evstart + (s.evend && s.evend !== s.evstart ? ' ‚Äî ' + s.evend : '') : '________';
   var t = '';
-  t += 'תדריך התנהגות מונעת - אירוע\n\n';
-  t += 'שם האירוע: ' + name + '\n\n';
-  t += 'תאריך: ' + date + '\n\n';
-  t += 'תקשורת\n';
-  t += '• יש לוודא כי מכשיר הטלפון טעון וזמין לאורך כל האירוע.\n';
-  t += '• יש להיות זמינים למענה לשיחות והודעות מצוות האבטחה.\n\n';
-  t += 'עדכון יציאה וחזרה\n';
-  t += '• יש לעדכן בעת היציאה לאירוע.\n';
-  t += '• יש לעדכן עם ההגעה לאירוע.\n';
-  t += '• יש לעדכן בעת העזיבה.\n';
-  t += '• יש לעדכן עם החזרה ליעד.\n\n';
-  t += 'שליחים נלווים\n';
-  t += '• יש לעדכן מראש על כל אדם המתלווה לאירוע.\n';
-  t += '• יש לדווח על כל שינוי בהרכב המשתתפים.\n\n';
-  t += 'כניסות ויציאות\n';
-  t += '• אין להתעכב באזור החיצוני של האירוע בעת ההגעה או העזיבה.\n';
-  t += '• יש לצמצם ככל האפשר את משך השהייה מחוץ למתחם.\n';
-  t += '• במידת האפשר, יש להשתמש בנתיבי כניסה ויציאה שאינם שגרתיים.\n\n';
-  t += 'ממשק עם זרים\n';
-  t += '• יש להימנע משיחות עם זרים באזורים הסמוכים לאירוע.\n';
-  t += '• יש לגלות ערנות כלפי אנשים הפונים אליכם ביוזמתם.\n';
-  t += '• במקרה של פנייה מקצועית, יש לבקש פרטי קשר או כרטיס ביקור.\n';
-  t += '• יש לדווח על כל פנייה חריגה או התעניינות בלתי רגילה.\n';
-  t += '• יש להימנע מעימותים, ויכוחים פוליטיים או שיחות העלולות להסלים.\n\n';
-  t += 'תנועה ותחבורה\n\n';
+  t += '◊™◊ì◊®◊ô◊ö ◊î◊™◊†◊î◊í◊ï◊™ ◊û◊ï◊†◊¢◊™ - ◊ê◊ô◊®◊ï◊¢\n\n';
+  t += '◊©◊ù ◊î◊ê◊ô◊®◊ï◊¢: ' + name + '\n\n';
+  t += '◊™◊ê◊®◊ô◊ö: ' + date + '\n\n';
+  t += '◊™◊ß◊©◊ï◊®◊™\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊ï◊ï◊ì◊ê ◊õ◊ô ◊û◊õ◊©◊ô◊® ◊î◊ò◊ú◊§◊ï◊ü ◊ò◊¢◊ï◊ü ◊ï◊ñ◊û◊ô◊ü ◊ú◊ê◊ï◊®◊ö ◊õ◊ú ◊î◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊ï◊™ ◊ñ◊û◊ô◊†◊ô◊ù ◊ú◊û◊¢◊†◊î ◊ú◊©◊ô◊ó◊ï◊™ ◊ï◊î◊ï◊ì◊¢◊ï◊™ ◊û◊¶◊ï◊ï◊™ ◊î◊ê◊ë◊ò◊ó◊î.\n\n';
+  t += '◊¢◊ì◊õ◊ï◊ü ◊ô◊¶◊ô◊ê◊î ◊ï◊ó◊ñ◊®◊î\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊¢◊ì◊õ◊ü ◊ë◊¢◊™ ◊î◊ô◊¶◊ô◊ê◊î ◊ú◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊¢◊ì◊õ◊ü ◊¢◊ù ◊î◊î◊í◊¢◊î ◊ú◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊¢◊ì◊õ◊ü ◊ë◊¢◊™ ◊î◊¢◊ñ◊ô◊ë◊î.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊¢◊ì◊õ◊ü ◊¢◊ù ◊î◊ó◊ñ◊®◊î ◊ú◊ô◊¢◊ì.\n\n';
+  t += '◊©◊ú◊ô◊ó◊ô◊ù ◊†◊ú◊ï◊ï◊ô◊ù\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊¢◊ì◊õ◊ü ◊û◊®◊ê◊© ◊¢◊ú ◊õ◊ú ◊ê◊ì◊ù ◊î◊û◊™◊ú◊ï◊ï◊î ◊ú◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊ì◊ï◊ï◊ó ◊¢◊ú ◊õ◊ú ◊©◊ô◊†◊ï◊ô ◊ë◊î◊®◊õ◊ë ◊î◊û◊©◊™◊™◊§◊ô◊ù.\n\n';
+  t += '◊õ◊†◊ô◊°◊ï◊™ ◊ï◊ô◊¶◊ô◊ê◊ï◊™\n';
+  t += '‚Ä¢ ◊ê◊ô◊ü ◊ú◊î◊™◊¢◊õ◊ë ◊ë◊ê◊ñ◊ï◊® ◊î◊ó◊ô◊¶◊ï◊†◊ô ◊©◊ú ◊î◊ê◊ô◊®◊ï◊¢ ◊ë◊¢◊™ ◊î◊î◊í◊¢◊î ◊ê◊ï ◊î◊¢◊ñ◊ô◊ë◊î.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊¶◊û◊¶◊ù ◊õ◊õ◊ú ◊î◊ê◊§◊©◊® ◊ê◊™ ◊û◊©◊ö ◊î◊©◊î◊ô◊ô◊î ◊û◊ó◊ï◊• ◊ú◊û◊™◊ó◊ù.\n';
+  t += '‚Ä¢ ◊ë◊û◊ô◊ì◊™ ◊î◊ê◊§◊©◊®, ◊ô◊© ◊ú◊î◊©◊™◊û◊© ◊ë◊†◊™◊ô◊ë◊ô ◊õ◊†◊ô◊°◊î ◊ï◊ô◊¶◊ô◊ê◊î ◊©◊ê◊ô◊†◊ù ◊©◊í◊®◊™◊ô◊ô◊ù.\n\n';
+  t += '◊û◊û◊©◊ß ◊¢◊ù ◊ñ◊®◊ô◊ù\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊û◊†◊¢ ◊û◊©◊ô◊ó◊ï◊™ ◊¢◊ù ◊ñ◊®◊ô◊ù ◊ë◊ê◊ñ◊ï◊®◊ô◊ù ◊î◊°◊û◊ï◊õ◊ô◊ù ◊ú◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊í◊ú◊ï◊™ ◊¢◊®◊†◊ï◊™ ◊õ◊ú◊§◊ô ◊ê◊†◊©◊ô◊ù ◊î◊§◊ï◊†◊ô◊ù ◊ê◊ú◊ô◊õ◊ù ◊ë◊ô◊ï◊ñ◊û◊™◊ù.\n';
+  t += '‚Ä¢ ◊ë◊û◊ß◊®◊î ◊©◊ú ◊§◊†◊ô◊ô◊î ◊û◊ß◊¶◊ï◊¢◊ô◊™, ◊ô◊© ◊ú◊ë◊ß◊© ◊§◊®◊ò◊ô ◊ß◊©◊® ◊ê◊ï ◊õ◊®◊ò◊ô◊° ◊ë◊ô◊ß◊ï◊®.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊ì◊ï◊ï◊ó ◊¢◊ú ◊õ◊ú ◊§◊†◊ô◊ô◊î ◊ó◊®◊ô◊í◊î ◊ê◊ï ◊î◊™◊¢◊†◊ô◊ô◊†◊ï◊™ ◊ë◊ú◊™◊ô ◊®◊í◊ô◊ú◊î.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊û◊†◊¢ ◊û◊¢◊ô◊û◊ï◊™◊ô◊ù, ◊ï◊ô◊õ◊ï◊ó◊ô◊ù ◊§◊ï◊ú◊ô◊ò◊ô◊ô◊ù ◊ê◊ï ◊©◊ô◊ó◊ï◊™ ◊î◊¢◊ú◊ï◊ú◊ï◊™ ◊ú◊î◊°◊ú◊ô◊ù.\n\n';
+  t += '◊™◊†◊ï◊¢◊î ◊ï◊™◊ó◊ë◊ï◊®◊î\n\n';
   t += transportBlock(mode) + '\n\n';
-  t += 'לבוש והופעה\n';
-  t += '• אין להסתובב במרחב הציבורי עם סממנים ישראליים או יהודיים בולטים.\n';
-  t += '• סיכות, תגי שם או אביזרים הנושאים דגל ישראל יש לענוד בתוך האירוע בלבד.\n';
-  t += '• יש לשמור על פרופיל נמוך ככל הניתן מחוץ למתחם האירוע.\n\n';
-  t += 'מודעות סביבתית ודיווח\n';
-  t += '• יש להיות ערניים לסביבה לפני, במהלך ואחרי האירוע.\n';
-  t += '• יש לדווח באופן מיידי על אדם, חפץ או אירוע חריג.\n';
-  t += '• במקרה של ספק - יש לדווח.\n\n';
-  t += 'רשתות חברתיות\n';
-  t += '• אין לפרסם בזמן אמת את המיקום או מסלול ההגעה לאירוע.\n';
-  t += '• אין לשתף פרטי אבטחה, סידורי כניסה או מידע רגיש הקשור לאירוע.';
+  t += '◊ú◊ë◊ï◊© ◊ï◊î◊ï◊§◊¢◊î\n';
+  t += '‚Ä¢ ◊ê◊ô◊ü ◊ú◊î◊°◊™◊ï◊ë◊ë ◊ë◊û◊®◊ó◊ë ◊î◊¶◊ô◊ë◊ï◊®◊ô ◊¢◊ù ◊°◊û◊û◊†◊ô◊ù ◊ô◊©◊®◊ê◊ú◊ô◊ô◊ù ◊ê◊ï ◊ô◊î◊ï◊ì◊ô◊ô◊ù ◊ë◊ï◊ú◊ò◊ô◊ù.\n';
+  t += '‚Ä¢ ◊°◊ô◊õ◊ï◊™, ◊™◊í◊ô ◊©◊ù ◊ê◊ï ◊ê◊ë◊ô◊ñ◊®◊ô◊ù ◊î◊†◊ï◊©◊ê◊ô◊ù ◊ì◊í◊ú ◊ô◊©◊®◊ê◊ú ◊ô◊© ◊ú◊¢◊†◊ï◊ì ◊ë◊™◊ï◊ö ◊î◊ê◊ô◊®◊ï◊¢ ◊ë◊ú◊ë◊ì.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊©◊û◊ï◊® ◊¢◊ú ◊§◊®◊ï◊§◊ô◊ú ◊†◊û◊ï◊ö ◊õ◊õ◊ú ◊î◊†◊ô◊™◊ü ◊û◊ó◊ï◊• ◊ú◊û◊™◊ó◊ù ◊î◊ê◊ô◊®◊ï◊¢.\n\n';
+  t += '◊û◊ï◊ì◊¢◊ï◊™ ◊°◊ë◊ô◊ë◊™◊ô◊™ ◊ï◊ì◊ô◊ï◊ï◊ó\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊î◊ô◊ï◊™ ◊¢◊®◊†◊ô◊ô◊ù ◊ú◊°◊ë◊ô◊ë◊î ◊ú◊§◊†◊ô, ◊ë◊û◊î◊ú◊ö ◊ï◊ê◊ó◊®◊ô ◊î◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ô◊© ◊ú◊ì◊ï◊ï◊ó ◊ë◊ê◊ï◊§◊ü ◊û◊ô◊ô◊ì◊ô ◊¢◊ú ◊ê◊ì◊ù, ◊ó◊§◊• ◊ê◊ï ◊ê◊ô◊®◊ï◊¢ ◊ó◊®◊ô◊í.\n';
+  t += '‚Ä¢ ◊ë◊û◊ß◊®◊î ◊©◊ú ◊°◊§◊ß - ◊ô◊© ◊ú◊ì◊ï◊ï◊ó.\n\n';
+  t += '◊®◊©◊™◊ï◊™ ◊ó◊ë◊®◊™◊ô◊ï◊™\n';
+  t += '‚Ä¢ ◊ê◊ô◊ü ◊ú◊§◊®◊°◊ù ◊ë◊ñ◊û◊ü ◊ê◊û◊™ ◊ê◊™ ◊î◊û◊ô◊ß◊ï◊ù ◊ê◊ï ◊û◊°◊ú◊ï◊ú ◊î◊î◊í◊¢◊î ◊ú◊ê◊ô◊®◊ï◊¢.\n';
+  t += '‚Ä¢ ◊ê◊ô◊ü ◊ú◊©◊™◊£ ◊§◊®◊ò◊ô ◊ê◊ë◊ò◊ó◊î, ◊°◊ô◊ì◊ï◊®◊ô ◊õ◊†◊ô◊°◊î ◊ê◊ï ◊û◊ô◊ì◊¢ ◊®◊í◊ô◊© ◊î◊ß◊©◊ï◊® ◊ú◊ê◊ô◊®◊ï◊¢.';
   return t;
 }
 
@@ -711,15 +747,15 @@ function copyBrief() {
   var ta = document.getElementById('mBrief');
   var text = ta.value;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() { showToast('📋 התדריך הועתק'); }, function() { fallbackCopy(ta); });
+    navigator.clipboard.writeText(text).then(function() { showToast('üìã ◊î◊™◊ì◊®◊ô◊ö ◊î◊ï◊¢◊™◊ß'); }, function() { fallbackCopy(ta); });
   } else {
     fallbackCopy(ta);
   }
 }
 function fallbackCopy(ta) {
   ta.focus(); ta.select();
-  try { document.execCommand('copy'); showToast('📋 התדריך הועתק'); }
-  catch (e) { showToast('לא ניתן להעתיק אוטומטית', '#dc2626'); }
+  try { document.execCommand('copy'); showToast('üìã ◊î◊™◊ì◊®◊ô◊ö ◊î◊ï◊¢◊™◊ß'); }
+  catch (e) { showToast('◊ú◊ê ◊†◊ô◊™◊ü ◊ú◊î◊¢◊™◊ô◊ß ◊ê◊ï◊ò◊ï◊û◊ò◊ô◊™', '#dc2626'); }
 }
 
 function waBrief(key) {
@@ -728,7 +764,7 @@ function waBrief(key) {
   var text = document.getElementById('mBrief').value;
   var d = (s.phone || '').replace(/\D/g, '');
   if (d.indexOf('00') === 0) d = d.slice(2);
-  else if (d.charAt(0) === '0') d = '44' + d.slice(1); // ברירת מחדל: קידומת בריטניה
+  else if (d.charAt(0) === '0') d = '44' + d.slice(1); // ◊ë◊®◊ô◊®◊™ ◊û◊ó◊ì◊ú: ◊ß◊ô◊ì◊ï◊û◊™ ◊ë◊®◊ô◊ò◊†◊ô◊î
   var url = 'https://wa.me/' + d + '?text=' + encodeURIComponent(text);
   window.open(url, '_blank');
 }
@@ -746,10 +782,10 @@ function saveDetail(key) {
     .then(function() {
       closeModalDirect();
       showView(currentView);
-      showToast('✓ נשמר ב-Firebase');
+      showToast('‚úì ◊†◊©◊û◊® ◊ë-Firebase');
     })
     .catch(function(err) {
-      alert('שגיאה בשמירה: ' + err.message);
+      alert('◊©◊í◊ô◊ê◊î ◊ë◊©◊û◊ô◊®◊î: ' + err.message);
       showView(currentView);
     });
 }
@@ -758,24 +794,25 @@ function closeModal(e) { if (e.target === document.getElementById('modalBg')) cl
 function closeModalDirect() { document.getElementById('modalBg').classList.remove('show'); }
 
 /* =========================================================
-   ייצוא CSV
+   ◊ô◊ô◊¶◊ï◊ê CSV
    ========================================================= */
 function exportCSV() {
-  if (!allSubmissions.length) { alert('אין נתונים לייצוא'); return; }
-  var keys = ['ref', 'timestamp', 'org', 'personalid', 'fname', 'lname', 'email', 'phone', 'evname', 'evstart', 'venue', 'evcat', 'jewishcommunity', 'recurring', 'govprox', 'score', 'manualScore', 'level', 'status', 'notes'];
-  var hdrs = ['אסמכתא', 'תאריך ושעת הגשה', 'בחסות', 'מספר זיהוי אישי', 'שם פרטי', 'שם משפחה', 'אימייל', 'טלפון', 'שם האירוע', 'תאריך אירוע', 'מיקום', 'קטגוריה', 'קהילה יהודית', 'אירוע חוזר', 'במוסד ממשלתי', 'ציון אוטומטי', 'ציון ידני', 'רמה', 'סטטוס', 'הערות'];
+  if (!allSubmissions.length) { alert('◊ê◊ô◊ü ◊†◊™◊ï◊†◊ô◊ù ◊ú◊ô◊ô◊¶◊ï◊ê'); return; }
+  var keys = ['ref', 'formType', 'timestamp', 'org', 'personalid', 'fname', 'lname', 'email', 'phone', 'evname', 'evstart', 'venue', 'evcat', 'jewishcommunity', 'recurring', 'govprox', 'meetPersonName', 'meetPersonRole', 'meetAcq', 'meetAcqBy', 'meetAddress', 'meetLocType', 'meetNotes', 'score', 'manualScore', 'level', 'status', 'notes'];
+  var hdrs = ['◊ê◊°◊û◊õ◊™◊ê', '◊°◊ï◊í ◊ò◊ï◊§◊°', '◊™◊ê◊®◊ô◊ö ◊ï◊©◊¢◊™ ◊î◊í◊©◊î', '◊ë◊ó◊°◊ï◊™', '◊û◊°◊§◊® ◊ñ◊ô◊î◊ï◊ô ◊ê◊ô◊©◊ô', '◊©◊ù ◊§◊®◊ò◊ô', '◊©◊ù ◊û◊©◊§◊ó◊î', '◊ê◊ô◊û◊ô◊ô◊ú', '◊ò◊ú◊§◊ï◊ü', '◊©◊ù ◊î◊ê◊ô◊®◊ï◊¢', '◊™◊ê◊®◊ô◊ö ◊ê◊ô◊®◊ï◊¢', '◊û◊ô◊ß◊ï◊ù', '◊ß◊ò◊í◊ï◊®◊ô◊î', '◊ß◊î◊ô◊ú◊î ◊ô◊î◊ï◊ì◊ô◊™', '◊ê◊ô◊®◊ï◊¢ ◊ó◊ï◊ñ◊®', '◊ë◊û◊ï◊°◊ì ◊û◊û◊©◊ú◊™◊ô', '◊©◊ù ◊î◊ê◊ì◊ù (◊§◊í◊ô◊©◊î)', '◊™◊§◊ß◊ô◊ì (◊§◊í◊ô◊©◊î)', '◊®◊û◊™ ◊î◊ô◊õ◊®◊ï◊™', '◊û◊ï◊õ◊® ◊¢◊ú ◊ô◊ì◊ô', '◊õ◊™◊ï◊ë◊™ ◊§◊í◊ô◊©◊î', '◊û◊ô◊ß◊ï◊ù ◊§◊í◊ô◊©◊î', '◊î◊¢◊®◊ï◊™ ◊§◊í◊ô◊©◊î', '◊¶◊ô◊ï◊ü ◊ê◊ï◊ò◊ï◊û◊ò◊ô', '◊¶◊ô◊ï◊ü ◊ô◊ì◊†◊ô', '◊®◊û◊î', '◊°◊ò◊ò◊ï◊°', '◊î◊¢◊®◊ï◊™'];
   var csv = hdrs.join(',') + '\n';
   allSubmissions.forEach(function(s) {
     csv += keys.map(function(k) {
       var v = s[k] || '';
+      if (k === 'formType') v = isMeeting(s) ? '◊§◊í◊ô◊©◊î' : '◊ê◊ô◊®◊ï◊¢';
       if (k === 'timestamp' && v) {
         var dt = formatSubmitDateTime(v);
         v = dt.date + ' ' + dt.time;
       }
-      return '"' + v + '"';
+      return '"' + String(v).replace(/"/g, '""') + '"';
     }).join(',') + '\n';
   });
-  var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  var blob = new Blob(['Ôªø' + csv], { type: 'text/csv;charset=utf-8' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
@@ -785,7 +822,7 @@ function exportCSV() {
 }
 
 /* =========================================================
-   מחיקה
+   ◊û◊ó◊ô◊ß◊î
    ========================================================= */
 function deleteFromFirebase(key) {
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
@@ -811,7 +848,7 @@ function confirmDelete(key) {
 
 function executeDelete(key) {
   var btn = document.getElementById('confirmDeleteBtn');
-  btn.textContent = 'מוחק...';
+  btn.textContent = '◊û◊ï◊ó◊ß...';
   btn.disabled = true;
   deleteFromFirebase(key)
     .then(function() {
@@ -819,14 +856,14 @@ function executeDelete(key) {
       delete selectedKeys[key];
       closeDeleteModal();
       showView(currentView);
-      showToast('🗑️ הבקשה נמחקה', '#dc2626');
+      showToast('üóëÔ∏è ◊î◊ë◊ß◊©◊î ◊†◊û◊ó◊ß◊î', '#dc2626');
     })
-    .catch(function(err) { closeDeleteModal(); alert('שגיאה במחיקה: ' + err.message); });
+    .catch(function(err) { closeDeleteModal(); alert('◊©◊í◊ô◊ê◊î ◊ë◊û◊ó◊ô◊ß◊î: ' + err.message); });
 }
 
 function confirmDeleteAll() {
-  if (!confirm('⚠️ האם אתה בטוח שברצונך למחוק את כל ההגשות? פעולה זו בלתי הפיכה!')) return;
-  if (!confirm('אישור אחרון — מחק הכל?')) return;
+  if (!confirm('‚ö†Ô∏è ◊î◊ê◊ù ◊ê◊™◊î ◊ë◊ò◊ï◊ó ◊©◊ë◊®◊¶◊ï◊†◊ö ◊ú◊û◊ó◊ï◊ß ◊ê◊™ ◊õ◊ú ◊î◊î◊í◊©◊ï◊™? ◊§◊¢◊ï◊ú◊î ◊ñ◊ï ◊ë◊ú◊™◊ô ◊î◊§◊ô◊õ◊î!')) return;
+  if (!confirm('◊ê◊ô◊©◊ï◊® ◊ê◊ó◊®◊ï◊ü ‚Äî ◊û◊ó◊ß ◊î◊õ◊ú?')) return;
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
     localStorage.removeItem('securitySubmissions');
     allSubmissions = [];
@@ -836,13 +873,13 @@ function confirmDeleteAll() {
   }
   fetch(FIREBASE_URL + '/submissions.json', { method: 'DELETE' })
     .then(function() { allSubmissions = []; selectedKeys = {}; showView(currentView); })
-    .catch(function(err) { alert('שגיאה: ' + err.message); });
+    .catch(function(err) { alert('◊©◊í◊ô◊ê◊î: ' + err.message); });
 }
 
 function closeDeleteModal() {
   document.getElementById('deleteModal').classList.remove('show');
   var btn = document.getElementById('confirmDeleteBtn');
-  btn.textContent = '🗑️ כן, מחק לצמיתות';
+  btn.textContent = 'üóëÔ∏è ◊õ◊ü, ◊û◊ó◊ß ◊ú◊¶◊û◊ô◊™◊ï◊™';
   btn.disabled = false;
 }
 </script>
