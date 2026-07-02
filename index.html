@@ -62,6 +62,7 @@ tr:last-child td{border-bottom:none}
 .act-btn{padding:4px 8px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Heebo',sans-serif;border:1px solid var(--border);background:white;transition:all .1s;margin-right:3px}
 .act-btn:hover{background:var(--bg)}
 .status-badge{padding:3px 9px;border-radius:12px;font-size:10px;font-weight:600;white-space:nowrap}
+.s-draft{background:#f1f5f9;color:#475569;border:1px dashed #94a3b8}
 .s-new{background:#dbeafe;color:#1e40af}
 .s-reviewed{background:#dcfce7;color:#15803d}
 .s-pending{background:#fef3c7;color:#92400e}
@@ -428,14 +429,14 @@ function stat(label, val, sub, color) {
 function miniBar(label, count, max, color) {
   return '<div class="mini-bar"><span class="ml">' + label + '</span><div class="mt"><div class="mf" style="width:' + Math.round(count / max * 100) + '%;background:' + color + '"></div></div><span class="mv">' + count + '</span></div>';
 }
-function statusLabel(st) { return { new: 'חדש', reviewed: 'נבדק', approved: 'אושר', pending: 'ממתין', rejected: 'נדחה' }[st] || st; }
+function statusLabel(st) { return { draft: 'טיוטה', new: 'חדש', reviewed: 'נבדק', approved: 'אושר', pending: 'ממתין', rejected: 'נדחה' }[st] || st; }
 
 function renderTable(list, title) {
   var html = '<div class="panel">';
   html += '<div class="panel-head"><h3>' + title + ' (' + list.length + ')</h3></div>';
   html += '<div class="filter-row"><input type="text" placeholder="חיפוש לפי שם אירוע, ארגון, מ. זיהוי..." oninput="filterTable(this.value)" id="searchInput">';
   html += '<select onchange="filterByLevel(this.value)" id="levelFilter"><option value="">כל הרמות</option><option value="low">נמוכה</option><option value="mid">בינונית</option><option value="high">גבוהה</option></select>';
-  html += '<select onchange="filterByStatus(this.value)" id="statusFilter"><option value="">כל הסטטוסים</option><option value="new">חדש</option><option value="reviewed">נבדק</option><option value="approved">אושר</option><option value="pending">ממתין</option><option value="rejected">נדחה</option></select>';
+  html += '<select onchange="filterByStatus(this.value)" id="statusFilter"><option value="">כל הסטטוסים</option><option value="draft">טיוטה</option><option value="new">חדש</option><option value="reviewed">נבדק</option><option value="approved">אושר</option><option value="pending">ממתין</option><option value="rejected">נדחה</option></select>';
   html += '</div>';
   html += buildTableHTML(list);
   html += '</div>';
@@ -460,7 +461,7 @@ function buildTableHTML(list) {
       : '<span class="badge" style="background:#dbeafe;color:#1e40af">📅 אירוע</span>';
     var nameCol = meeting ? (s.meetPersonName || '—') : (s.org || '—');
     var titleCol = meeting ? (s.meetPersonRole || '—') : (s.evname || '—');
-    var dateCol = meeting ? '—' : (s.evstart || '—');
+    var dateCol = meeting ? (s.meetDate ? (s.meetDate + (s.meetTime ? ' ' + s.meetTime : '')) : '—') : (s.evstart || '—');
     html += '<tr>';
     html += '<td class="chk-col"><input type="checkbox" class="rowChk" data-key="' + escapeHtml(key) + '" onchange="toggleRow(\'' + key + '\',this.checked)"' + checked + '></td>';
     html += '<td style="font-weight:600;color:var(--navy2)">' + (s.personalid || '—') + '</td>';
@@ -582,10 +583,14 @@ function openDetail(key) {
     html += dtRow('מספר זיהוי אישי', s.personalid);
     html += dtRow('שם האדם', s.meetPersonName);
     html += dtRow('תפקיד האדם', s.meetPersonRole);
+    html += dtRow('תאריך הפגישה', (s.meetDate || '—') + (s.meetTime ? ' בשעה ' + s.meetTime : ''));
     html += dtRow('רמת היכרות', s.meetAcq);
     if (s.meetAcqBy) html += dtRow('מוכר ומהימן על ידי', s.meetAcqBy);
     html += dtRow('כתובת הפגישה', s.meetAddress);
     html += dtRow('מיקום הפגישה', s.meetLocType === 'אחר' ? (s.meetLocOther || 'אחר') : (s.meetLocType || '—'));
+    if (s.participants) {
+      html += '<div class="ds-title">משתתפים נוספים</div><div style="font-size:13px;line-height:1.6;white-space:pre-line">' + escapeHtml(s.participants) + '</div>';
+    }
     if (s.meetNotes) {
       html += '<div class="ds-title">הערות לגבי האדם</div><div style="font-size:13px;line-height:1.6">' + escapeHtml(s.meetNotes) + '</div>';
     }
@@ -617,6 +622,10 @@ function openDetail(key) {
     html += dtRow('הפגנות', s.protest);
     html += dtRow('תפקיד באירוע', s.eventrole === 'אחר' ? (s.eventrole_other || 'אחר') : (s.eventrole || '—'));
 
+    if (s.participants) {
+      html += '<div class="ds-title">משתתפים נוספים</div><div style="font-size:13px;line-height:1.6;white-space:pre-line">' + escapeHtml(s.participants) + '</div>';
+    }
+
     if (s.extra) {
       html += '<div class="ds-title">מידע נוסף</div><div style="font-size:13px;line-height:1.6">' + s.extra + '</div>';
     }
@@ -647,6 +656,7 @@ function openDetail(key) {
   html += '<div class="range-row"><input type="range" min="0" max="10" value="' + sc + '" id="mRange" oninput="document.getElementById(\'mNum\').value=this.value"><input type="number" min="0" max="10" value="' + sc + '" id="mNum" oninput="document.getElementById(\'mRange\').value=this.value"></div>';
   html += '<label>סטטוס</label>';
   html += '<select class="sel-status" id="mStatus">';
+  html += '<option value="draft"' + (s.status === 'draft' ? ' selected' : '') + '>טיוטה</option>';
   html += '<option value="new"' + (s.status === 'new' ? ' selected' : '') + '>חדש</option>';
   html += '<option value="reviewed"' + (s.status === 'reviewed' ? ' selected' : '') + '>נבדק</option>';
   html += '<option value="approved"' + (s.status === 'approved' ? ' selected' : '') + '>אושר</option>';
