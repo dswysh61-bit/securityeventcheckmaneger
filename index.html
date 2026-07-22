@@ -133,6 +133,7 @@ tr:last-child td{border-bottom:none}
   <div class="nav-item" onclick="showView('all')"><span class="nav-icon">📋</span> כל ההגשות</div>
   <div class="nav-item" onclick="showView('events')"><span class="nav-icon">📅</span> אירועים</div>
   <div class="nav-item" onclick="showView('meetings')"><span class="nav-icon">🤝</span> פגישות</div>
+  <div class="nav-item" onclick="showView('packages')"><span class="nav-icon">📦</span> חבילות</div>
   <div class="nav-item" onclick="showView('high')"><span class="nav-icon">🔴</span> סיכון גבוה</div>
   <div class="nav-item" onclick="showView('pending')"><span class="nav-icon">⏳</span> ממתינות לבדיקה</div>
   <div style="margin-top:auto;padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.1)">
@@ -147,7 +148,7 @@ tr:last-child td{border-bottom:none}
     <div style="display:flex;gap:12px;align-items:center">
       <div class="admin-chip" id="adminChip"></div>
       <div style="display:flex;gap:8px">
-        <button class="btn" onclick="exportCSV()">ייצא CSV</button>
+        <button class="btn" onclick="exportWeeklyWord()">📄 ייצא לוז שבועי (Word)</button>
         <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑️ מחק הכל</button>
         <button class="btn btn-primary" onclick="loadFromFirebase()">🔄 רענן</button>
       </div>
@@ -311,9 +312,10 @@ function updateInLocalStorage(key, updates) {
   localStorage.setItem('securitySubmissions', JSON.stringify(raw));
 }
 
-/* הבחנה בין אירוע לפגישה (הגשות ישנות ללא formType נחשבות כאירוע) */
+/* הבחנה בין אירוע, פגישה וחבילה (הגשות ישנות ללא formType נחשבות כאירוע) */
 function isMeeting(s) { return s && s.formType === 'meeting'; }
-function isEvent(s) { return !isMeeting(s); }
+function isPackage(s) { return s && s.formType === 'package'; }
+function isEvent(s) { return s && s.formType !== 'meeting' && s.formType !== 'package'; }
 
 /* =========================================================
    עזר: פורמט תאריך ושעת הגשה
@@ -339,14 +341,15 @@ function levelInfo(sc) {
 function showView(v) {
   currentView = v;
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-  var idx = { dashboard: 0, all: 1, events: 2, meetings: 3, high: 4, pending: 5 }[v] || 0;
+  var idx = { dashboard: 0, all: 1, events: 2, meetings: 3, packages: 4, high: 5, pending: 6 }[v] || 0;
   document.querySelectorAll('.nav-item')[idx].classList.add('active');
-  var titles = { dashboard: 'דשבורד ראשי', all: 'כל ההגשות', events: 'אירועים', meetings: 'פגישות', high: 'אירועים בסיכון גבוה', pending: 'ממתינות לבדיקה' };
+  var titles = { dashboard: 'דשבורד ראשי', all: 'כל ההגשות', events: 'אירועים', meetings: 'פגישות', packages: 'חבילות', high: 'אירועים בסיכון גבוה', pending: 'ממתינות לבדיקה' };
   document.getElementById('pageTitle').textContent = titles[v] || v;
   if (v === 'dashboard') renderDashboard();
   else if (v === 'all') renderTable(allSubmissions, 'כל ההגשות');
   else if (v === 'events') renderTable(allSubmissions.filter(isEvent), 'אירועים');
   else if (v === 'meetings') renderTable(allSubmissions.filter(isMeeting), 'פגישות');
+  else if (v === 'packages') renderTable(allSubmissions.filter(isPackage), 'חבילות');
   else if (v === 'high') renderTable(allSubmissions.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }), 'סיכון גבוה');
   else if (v === 'pending') renderTable(allSubmissions.filter(function(s) { return !s.status || s.status === 'new'; }), 'ממתינות לבדיקה');
   updateBulkBar();
@@ -355,11 +358,12 @@ function showView(v) {
 function renderDashboard() {
   var subs = allSubmissions;
   var total = subs.length;
-  var low = subs.filter(function(s) { return (s.manualScore || s.score || 0) <= 3; }).length;
-  var mid = subs.filter(function(s) { var sc = s.manualScore || s.score || 0; return sc >= 4 && sc <= 7; }).length;
-  var high = subs.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }).length;
-  var pending = subs.filter(function(s) { return !s.status || s.status === 'new'; }).length;
-  var avg = total ? Math.round(subs.reduce(function(a, b) { return a + (b.manualScore || b.score || 0); }, 0) / total) : 0;
+  var risk = subs.filter(function(s) { return !isPackage(s); }); // חבילות ללא ציון סיכון
+  var low = risk.filter(function(s) { return (s.manualScore || s.score || 0) <= 3; }).length;
+  var mid = risk.filter(function(s) { var sc = s.manualScore || s.score || 0; return sc >= 4 && sc <= 7; }).length;
+  var high = risk.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }).length;
+  var pending = risk.filter(function(s) { return !s.status || s.status === 'new'; }).length;
+  var avg = risk.length ? Math.round(risk.reduce(function(a, b) { return a + (b.manualScore || b.score || 0); }, 0) / risk.length) : 0;
 
   var html = '';
 
@@ -373,11 +377,13 @@ function renderDashboard() {
 
   var eventsCount = subs.filter(isEvent).length;
   var meetingsCount = subs.filter(isMeeting).length;
+  var packagesCount = subs.filter(isPackage).length;
 
   html += '<div class="stats-grid">';
   html += stat('סה"כ הגשות', total, 'כולל כל הסטטוסים');
   html += stat('אירועים', eventsCount, 'טופס מלא', '#1e40af');
   html += stat('פגישות', meetingsCount, 'טופס קצר', '#6d28d9');
+  html += stat('חבילות', packagesCount, 'חבילות נכנסות', '#b45309');
   html += stat('ממתינות', pending, 'טרם טופלו', '#d97706');
   html += stat('סיכון גבוה', high, 'ציון 8 ומעלה', '#dc2626');
   html += stat('ציון ממוצע', avg, 'מתוך 10');
@@ -402,7 +408,7 @@ function renderDashboard() {
       var li = levelInfo(sc);
       var st = s.status || 'new';
       var dt = formatSubmitDateTime(s.timestamp);
-      var rName = isMeeting(s) ? ('🤝 ' + (s.meetPersonName || 'פגישה')) : ('📅 ' + (s.evname || '—'));
+      var rName = isMeeting(s) ? ('🤝 ' + (s.meetPersonName || 'פגישה')) : (isPackage(s) ? ('📦 ' + (s.pkgRecipient || 'חבילה')) : ('📅 ' + (s.evname || '—')));
       html += '<tr>';
       html += '<td style="font-weight:500">' + rName + '</td>';
       html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
@@ -456,12 +462,15 @@ function buildTableHTML(list) {
     var dt = formatSubmitDateTime(s.timestamp);
     var checked = selectedKeys[key] ? ' checked' : '';
     var meeting = isMeeting(s);
+    var pkg = isPackage(s);
     var typeBadge = meeting
       ? '<span class="badge" style="background:#ede9fe;color:#6d28d9">🤝 פגישה</span>'
+      : pkg
+      ? '<span class="badge" style="background:#fef3c7;color:#b45309">📦 חבילה</span>'
       : '<span class="badge" style="background:#dbeafe;color:#1e40af">📅 אירוע</span>';
-    var nameCol = meeting ? (s.meetPersonName || '—') : (s.org || '—');
-    var titleCol = meeting ? (s.meetPersonRole || '—') : (s.evname || '—');
-    var dateCol = meeting ? (s.meetDate ? (s.meetDate + (s.meetTime ? ' ' + s.meetTime : '')) : '—') : (s.evstart || '—');
+    var nameCol = meeting ? (s.meetPersonName || '—') : pkg ? (s.pkgRecipient || '—') : (s.org || '—');
+    var titleCol = meeting ? (s.meetPersonRole || '—') : pkg ? (s.pkgDesc || '—') : (s.evname || '—');
+    var dateCol = meeting ? (s.meetDate ? (s.meetDate + (s.meetTime ? ' ' + s.meetTime : '')) : '—') : pkg ? (s.pkgDate || '—') : (s.evstart || '—');
     html += '<tr>';
     html += '<td class="chk-col"><input type="checkbox" class="rowChk" data-key="' + escapeHtml(key) + '" onchange="toggleRow(\'' + key + '\',this.checked)"' + checked + '></td>';
     html += '<td style="font-weight:600;color:var(--navy2)">' + (s.personalid || '—') + '</td>';
@@ -470,11 +479,12 @@ function buildTableHTML(list) {
     html += '<td style="font-weight:500">' + titleCol + '</td>';
     html += '<td style="color:var(--muted)">' + dateCol + '</td>';
     html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
-    html += '<td><span class="score-num ' + li.scls + '">' + sc + '</span></td>';
-    html += '<td><span class="badge ' + li.cls + '">' + li.label + '</span></td>';
-    html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
+    html += '<td>' + (pkg ? '—' : '<span class="score-num ' + li.scls + '">' + sc + '</span>') + '</td>';
+    html += '<td>' + (pkg ? '—' : '<span class="badge ' + li.cls + '">' + li.label + '</span>') + '</td>';
+    html += '<td>' + (pkg ? '<span class="status-badge s-new">חבילה</span>' : '<span class="status-badge s-' + st + '">' + statusLabel(st) + '</span>') + '</td>';
     html += '<td style="white-space:nowrap">';
-    html += '<button class="act-btn" title="צפה / דרג" onclick="openDetail(\'' + key + '\')">📋</button>';
+    html += '<button class="act-btn" title="צפה" onclick="openDetail(\'' + key + '\')">📋</button>';
+    if (pkg) html += '<button class="act-btn" style="color:#15803d;border-color:#86efac" title="התקבלה — סמן ומחק" onclick="markReceived(\'' + key + '\')">📦✓</button>';
     html += '<button class="act-btn" style="color:#dc2626;border-color:#fca5a5" title="מחק" onclick="confirmDelete(\'' + key + '\')">🗑️</button>';
     html += '</td></tr>';
   });
@@ -556,6 +566,9 @@ function bulkDeleteSelected() {
 function openDetail(key) {
   var s = findByKey(key);
   if (!s) return;
+
+  if (isPackage(s)) { openPackageDetail(key, s); return; }
+
   var sc = s.manualScore || s.score || 0;
   var li = levelInfo(sc);
   var pct = Math.round(sc / 10 * 100);
@@ -804,29 +817,140 @@ function closeModal(e) { if (e.target === document.getElementById('modalBg')) cl
 function closeModalDirect() { document.getElementById('modalBg').classList.remove('show'); }
 
 /* =========================================================
-   ייצוא CSV
+   פרטי חבילה + סימון "התקבלה" (מחיקה אוטומטית)
    ========================================================= */
-function exportCSV() {
-  if (!allSubmissions.length) { alert('אין נתונים לייצוא'); return; }
-  var keys = ['ref', 'formType', 'timestamp', 'org', 'personalid', 'fname', 'lname', 'email', 'phone', 'evname', 'evstart', 'venue', 'evcat', 'jewishcommunity', 'recurring', 'govprox', 'meetPersonName', 'meetPersonRole', 'meetAcq', 'meetAcqBy', 'meetAddress', 'meetLocType', 'meetNotes', 'score', 'manualScore', 'level', 'status', 'notes'];
-  var hdrs = ['אסמכתא', 'סוג טופס', 'תאריך ושעת הגשה', 'בחסות', 'מספר זיהוי אישי', 'שם פרטי', 'שם משפחה', 'אימייל', 'טלפון', 'שם האירוע', 'תאריך אירוע', 'מיקום', 'קטגוריה', 'קהילה יהודית', 'אירוע חוזר', 'במוסד ממשלתי', 'שם האדם (פגישה)', 'תפקיד (פגישה)', 'רמת היכרות', 'מוכר על ידי', 'כתובת פגישה', 'מיקום פגישה', 'הערות פגישה', 'ציון אוטומטי', 'ציון ידני', 'רמה', 'סטטוס', 'הערות'];
-  var csv = hdrs.join(',') + '\n';
+function openPackageDetail(key, s) {
+  var dt = formatSubmitDateTime(s.timestamp);
+  function dtRow(l, v) {
+    return '<div class="dt"><span class="dl">' + l + '</span><span class="dv">' + (v || '—') + '</span></div>';
+  }
+  var html = '<div class="score-big" style="background:#fffbeb">';
+  html += '<div style="font-size:40px">📦</div>';
+  html += '<span class="badge" style="background:#fef3c7;color:#b45309;font-size:13px">חבילה נכנסת</span>';
+  if (dt.date !== '—') {
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--muted)">נרשם ב: <strong style="color:var(--text)">' + dt.date + ' בשעה ' + dt.time + '</strong></div>';
+  }
+  html += '</div>';
+  html += '<div class="ds-title">פרטי החבילה</div>';
+  html += dtRow('על שם', s.pkgRecipient);
+  html += dtRow('תאריך הגעה משוער', s.pkgDate);
+  html += '<div class="ds-title">תיאור התכולה</div><div style="font-size:13px;line-height:1.6;white-space:pre-line">' + escapeHtml(s.pkgDesc || '—') + '</div>';
+  if (s.pkgNotes) {
+    html += '<div class="ds-title">הערות</div><div style="font-size:13px;line-height:1.6;white-space:pre-line">' + escapeHtml(s.pkgNotes) + '</div>';
+  }
+  document.getElementById('modalTitle').textContent = s.pkgRecipient ? ('חבילה: ' + s.pkgRecipient) : 'פרטי חבילה';
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalFoot').innerHTML =
+    '<button class="btn" onclick="closeModalDirect()">סגור</button>' +
+    '<button class="btn" style="background:#dcfce7;color:#15803d;border-color:#86efac" onclick="markReceived(\'' + key + '\')">📦 סמן כהתקבלה ומחק</button>';
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function markReceived(key) {
+  var s = findByKey(key);
+  var name = s ? (s.pkgRecipient || '') : '';
+  if (!confirm('לסמן את החבילה' + (name ? ' של ' + name : '') + ' כהתקבלה?\nהרישום יימחק מהדשבורד.')) return;
+  deleteFromFirebase(key)
+    .then(function() {
+      allSubmissions = allSubmissions.filter(function(x) { return keyOf(x) !== key; });
+      delete selectedKeys[key];
+      closeModalDirect();
+      showView(currentView);
+      showToast('📦 החבילה סומנה כהתקבלה ונמחקה', '#15803d');
+    })
+    .catch(function(err) { alert('שגיאה: ' + err.message); });
+}
+
+/* =========================================================
+   ייצוא לוז שבועי לקובץ Word — לשבוע הבא (ראשון עד שבת)
+   טבלה נפרדת לכל יום, כולל אירועים ופגישות
+   ========================================================= */
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function ymd(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function dmy(d) { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear(); }
+
+function nextWeekStart() {
+  var d = new Date();
+  d.setHours(0, 0, 0, 0);
+  var daysUntilSunday = (7 - d.getDay()) % 7; // 0=ראשון
+  if (daysUntilSunday === 0) daysUntilSunday = 7; // אם היום ראשון — קפוץ לראשון הבא
+  d.setDate(d.getDate() + daysUntilSunday);
+  return d;
+}
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function exportWeeklyWord() {
+  var dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  var start = nextWeekStart();
+  var days = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(start);
+    d.setDate(start.getDate() + i);
+    days.push(d);
+  }
+  var weekEnd = days[6];
+
+  // אסוף פריטים לפי תאריך (yyyy-mm-dd)
+  var byDate = {};
+  days.forEach(function(d) { byDate[ymd(d)] = []; });
+
   allSubmissions.forEach(function(s) {
-    csv += keys.map(function(k) {
-      var v = s[k] || '';
-      if (k === 'formType') v = isMeeting(s) ? 'פגישה' : 'אירוע';
-      if (k === 'timestamp' && v) {
-        var dt = formatSubmitDateTime(v);
-        v = dt.date + ' ' + dt.time;
-      }
-      return '"' + String(v).replace(/"/g, '""') + '"';
-    }).join(',') + '\n';
+    var meeting = isMeeting(s);
+    var pkg = isPackage(s);
+    var dateStr = meeting ? s.meetDate : (pkg ? s.pkgDate : s.evstart);
+    if (!dateStr || !(dateStr in byDate)) return; // ללא תאריך או מחוץ לשבוע — לא נכנס ללוז
+    var time = meeting
+      ? (s.meetTime || '')
+      : pkg
+      ? ''
+      : ((s.evstarttime || '') + (s.evendtime ? ' - ' + s.evendtime : ''));
+    var loc = meeting ? (s.meetAddress || s.meetLocType || '') : (pkg ? '' : (s.venue || ''));
+    var notes = meeting ? (s.meetNotes || '') : (pkg ? ('חבילה — ' + (s.pkgDesc || '')) : (s.extra || ''));
+    var dept = meeting ? (s.meetPersonName || '') : (pkg ? ('📦 ' + (s.pkgRecipient || '')) : (s.evname || ''));
+    byDate[dateStr].push({ time: time, loc: loc, notes: notes, dept: dept, meeting: meeting });
   });
-  var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+
+  // בנה HTML תואם Word
+  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8">';
+  html += '<style>body{font-family:Arial,sans-serif;direction:rtl}';
+  html += 'h1{font-size:20px;text-align:center;color:#0f2744}';
+  html += 'h2{font-size:15px;color:#1a3a5c;border-bottom:2px solid #1a3a5c;padding-bottom:3px;margin-top:22px}';
+  html += 'table{border-collapse:collapse;width:100%;margin-top:6px}';
+  html += 'th,td{border:1px solid #94a3b8;padding:6px 8px;font-size:12px;text-align:right}';
+  html += 'th{background:#1a3a5c;color:#fff}';
+  html += '.empty{color:#94a3b8;font-style:italic}</style></head><body>';
+  html += '<h1>לוז שבועי — ' + dmy(start) + ' עד ' + dmy(weekEnd) + '</h1>';
+
+  days.forEach(function(d) {
+    var items = byDate[ymd(d)] || [];
+    items.sort(function(a, b) { return (a.time || '').localeCompare(b.time || ''); });
+    html += '<h2>יום ' + dayNames[d.getDay()] + ' — ' + dmy(d) + '</h2>';
+    html += '<table><tr><th style="width:16%">שעה</th><th style="width:28%">מיקום</th><th style="width:36%">הערות</th><th style="width:20%">מחלקה</th></tr>';
+    if (!items.length) {
+      html += '<tr><td colspan="4" class="empty">אין אירועים או פגישות ליום זה</td></tr>';
+    } else {
+      items.forEach(function(it) {
+        html += '<tr>';
+        html += '<td>' + esc(it.time || '—') + '</td>';
+        html += '<td>' + esc(it.loc || '—') + '</td>';
+        html += '<td>' + esc(it.notes || '—') + '</td>';
+        html += '<td>' + esc(it.dept || '—') + '</td>';
+        html += '</tr>';
+      });
+    }
+    html += '</table>';
+  });
+
+  html += '</body></html>';
+
+  var blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'security_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.download = 'לוז_שבועי_' + ymd(start) + '.doc';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -851,7 +975,7 @@ function deleteFromFirebase(key) {
 function confirmDelete(key) {
   var s = findByKey(key);
   document.getElementById('deleteRef').textContent = s ? (s.ref || '') : '';
-  document.getElementById('deleteEvname').textContent = s ? (s.evname || '') : '';
+  document.getElementById('deleteEvname').textContent = s ? (s.evname || (isMeeting(s) ? s.meetPersonName : '') || (isPackage(s) ? s.pkgRecipient : '') || '') : '';
   document.getElementById('deleteModal').classList.add('show');
   document.getElementById('confirmDeleteBtn').onclick = function() { executeDelete(key); };
 }
