@@ -908,8 +908,8 @@ function exportWeeklyWord() {
       ? ''
       : ((s.evstarttime || '') + (s.evendtime ? ' - ' + s.evendtime : ''));
     var loc = meeting ? (s.meetAddress || s.meetLocType || '') : (pkg ? '' : (s.venue || ''));
-    var notes = meeting ? (s.meetNotes || '') : (pkg ? ('חבילה — ' + (s.pkgDesc || '')) : (s.extra || ''));
-    var dept = meeting ? (s.meetPersonName || '') : (pkg ? ('📦 ' + (s.pkgRecipient || '')) : (s.evname || ''));
+    var notes = meeting ? (s.meetNotes || '') : (pkg ? ('חבילה עבור ' + (s.pkgRecipient || '—') + ' — ' + (s.pkgDesc || '')) : (s.extra || ''));
+    var dept = s.personalid || '';
     byDate[dateStr].push({ time: time, loc: loc, notes: notes, dept: dept, meeting: meeting });
   });
 
