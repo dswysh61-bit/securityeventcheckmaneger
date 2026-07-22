@@ -908,9 +908,18 @@ function exportWeeklyWord() {
       ? ''
       : ((s.evstarttime || '') + (s.evendtime ? ' - ' + s.evendtime : ''));
     var loc = meeting ? (s.meetAddress || s.meetLocType || '') : (pkg ? '' : (s.venue || ''));
-    var notes = meeting ? (s.meetNotes || '') : (pkg ? ('חבילה עבור ' + (s.pkgRecipient || '—') + ' — ' + (s.pkgDesc || '')) : (s.extra || ''));
+    var desc = meeting
+      ? ('פגישה עם ' + (s.meetPersonName || '—') + (s.meetPersonRole ? ' (' + s.meetPersonRole + ')' : ''))
+      : pkg
+      ? ('חבילה עבור ' + (s.pkgRecipient || '—'))
+      : (s.evname || '');
+    var notes = meeting
+      ? (s.meetNotes || '')
+      : pkg
+      ? ((s.pkgDesc || '') + (s.pkgNotes ? ' — ' + s.pkgNotes : ''))
+      : (s.extra || '');
     var dept = s.personalid || '';
-    byDate[dateStr].push({ time: time, loc: loc, notes: notes, dept: dept, meeting: meeting });
+    byDate[dateStr].push({ time: time, loc: loc, desc: desc, notes: notes, dept: dept, meeting: meeting });
   });
 
   // בנה HTML תואם Word
@@ -928,14 +937,15 @@ function exportWeeklyWord() {
     var items = byDate[ymd(d)] || [];
     items.sort(function(a, b) { return (a.time || '').localeCompare(b.time || ''); });
     html += '<h2>יום ' + dayNames[d.getDay()] + ' — ' + dmy(d) + '</h2>';
-    html += '<table><tr><th style="width:16%">שעה</th><th style="width:28%">מיקום</th><th style="width:36%">הערות</th><th style="width:20%">מחלקה</th></tr>';
+    html += '<table><tr><th style="width:12%">שעה</th><th style="width:18%">מיקום</th><th style="width:28%">תיאור</th><th style="width:27%">הערות</th><th style="width:15%">מחלקה</th></tr>';
     if (!items.length) {
-      html += '<tr><td colspan="4" class="empty">אין אירועים או פגישות ליום זה</td></tr>';
+      html += '<tr><td colspan="5" class="empty">אין אירועים או פגישות ליום זה</td></tr>';
     } else {
       items.forEach(function(it) {
         html += '<tr>';
         html += '<td>' + esc(it.time || '—') + '</td>';
         html += '<td>' + esc(it.loc || '—') + '</td>';
+        html += '<td>' + esc(it.desc || '—') + '</td>';
         html += '<td>' + esc(it.notes || '—') + '</td>';
         html += '<td>' + esc(it.dept || '—') + '</td>';
         html += '</tr>';
