@@ -913,11 +913,14 @@ function exportWeeklyWord() {
       : pkg
       ? ('חבילה עבור ' + (s.pkgRecipient || '—'))
       : (s.evname || '');
-    var notes = meeting
+    var submitterNotes = meeting
       ? (s.meetNotes || '')
       : pkg
       ? ((s.pkgDesc || '') + (s.pkgNotes ? ' — ' + s.pkgNotes : ''))
       : (s.extra || '');
+    // הערות פנימיות שהמנהל מוסיף בכרטיס ההגשה (s.notes) — מקבלות עדיפות בלוז
+    var mgrNotes = s.notes || '';
+    var notes = [mgrNotes, submitterNotes].filter(function(x){ return x && x.trim(); }).join(' | ');
     var dept = s.personalid || '';
     byDate[dateStr].push({ time: time, loc: loc, desc: desc, notes: notes, dept: dept, meeting: meeting });
   });
