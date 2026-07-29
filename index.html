@@ -148,7 +148,8 @@ tr:last-child td{border-bottom:none}
     <div style="display:flex;gap:12px;align-items:center">
       <div class="admin-chip" id="adminChip"></div>
       <div style="display:flex;gap:8px">
-        <button class="btn" onclick="exportWeeklyWord()">📄 ייצא לוז שבועי (Word)</button>
+        <button class="btn" onclick="exportWeeklyWord(0)">📄 לוז השבוע</button>
+        <button class="btn" onclick="exportWeeklyWord(1)">📄 לוז שבוע הבא</button>
         <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑️ מחק הכל</button>
         <button class="btn btn-primary" onclick="loadFromFirebase()">🔄 רענן</button>
       </div>
@@ -236,11 +237,24 @@ window.addEventListener('DOMContentLoaded', function() {
 /* מזהה יציב לכל הגשה: מפתח ה-Firebase האמיתי, ובמצב מקומי – האסמכתא */
 function keyOf(s) { return s._fbKey || s.ref; }
 /* מיון לפי תאריך האירוע (evstart) – מהקרוב למאוחר; ללא תאריך – לסוף */
+function eventDateOf(s) {
+  if (!s) return '';
+  if (s.formType === 'meeting') return s.meetDate || '';
+  if (s.formType === 'package') return s.pkgDate || '';
+  return s.evstart || '';
+}
+function eventTimeOf(s) {
+  if (!s) return '';
+  if (s.formType === 'meeting') return s.meetTime || '';
+  if (s.formType === 'package') return '';
+  return s.evstarttime || '';
+}
 function sortByEventDate(a, b) {
-  if (!a.evstart && !b.evstart) return 0;
-  if (!a.evstart) return 1;
-  if (!b.evstart) return -1;
-  var ea = a.evstart + (a.evstarttime || ''), eb = b.evstart + (b.evstarttime || '');
+  var da = eventDateOf(a), db = eventDateOf(b);
+  if (!da && !db) return 0;
+  if (!da) return 1;
+  if (!db) return -1;
+  var ea = da + (eventTimeOf(a) || ''), eb = db + (eventTimeOf(b) || '');
   return ea.localeCompare(eb);
 }
 function findByKey(key) { return allSubmissions.find(function(x) { return keyOf(x) === key; }); }
@@ -869,12 +883,11 @@ function pad2(n) { return (n < 10 ? '0' : '') + n; }
 function ymd(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 function dmy(d) { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear(); }
 
-function nextWeekStart() {
+function weekStart(offset) {
+  // offset 0 = השבוע הנוכחי (ראשון האחרון), offset 1 = השבוע הבא
   var d = new Date();
   d.setHours(0, 0, 0, 0);
-  var daysUntilSunday = (7 - d.getDay()) % 7; // 0=ראשון
-  if (daysUntilSunday === 0) daysUntilSunday = 7; // אם היום ראשון — קפוץ לראשון הבא
-  d.setDate(d.getDate() + daysUntilSunday);
+  d.setDate(d.getDate() - d.getDay() + (offset || 0) * 7);
   return d;
 }
 
@@ -882,9 +895,9 @@ function esc(v) {
   return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function exportWeeklyWord() {
+function exportWeeklyWord(offset) {
   var dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-  var start = nextWeekStart();
+  var start = weekStart(offset || 0);
   var days = [];
   for (var i = 0; i < 7; i++) {
     var d = new Date(start);
