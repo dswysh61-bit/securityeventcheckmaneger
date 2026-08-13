@@ -370,9 +370,9 @@ function showView(v) {
 }
 
 function renderDashboard() {
-  var subs = allSubmissions;
+  var subs = allSubmissions.filter(function(s) { return !isPackage(s); }); // חבילות מופיעות רק בלשונית "חבילות"
   var total = subs.length;
-  var risk = subs.filter(function(s) { return !isPackage(s); }); // חבילות ללא ציון סיכון
+  var risk = subs; // חבילות ללא ציון סיכון
   var low = risk.filter(function(s) { return (s.manualScore || s.score || 0) <= 3; }).length;
   var mid = risk.filter(function(s) { var sc = s.manualScore || s.score || 0; return sc >= 4 && sc <= 7; }).length;
   var high = risk.filter(function(s) { return (s.manualScore || s.score || 0) >= 8; }).length;
@@ -391,13 +391,11 @@ function renderDashboard() {
 
   var eventsCount = subs.filter(isEvent).length;
   var meetingsCount = subs.filter(isMeeting).length;
-  var packagesCount = subs.filter(isPackage).length;
 
   html += '<div class="stats-grid">';
-  html += stat('סה"כ הגשות', total, 'כולל כל הסטטוסים');
+  html += stat('סה"כ הגשות', total, 'אירועים ופגישות');
   html += stat('אירועים', eventsCount, 'טופס מלא', '#1e40af');
   html += stat('פגישות', meetingsCount, 'טופס קצר', '#6d28d9');
-  html += stat('חבילות', packagesCount, 'חבילות נכנסות', '#b45309');
   html += stat('ממתינות', pending, 'טרם טופלו', '#d97706');
   html += stat('סיכון גבוה', high, 'ציון 8 ומעלה', '#dc2626');
   html += stat('ציון ממוצע', avg, 'מתוך 10');
