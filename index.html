@@ -533,7 +533,7 @@ function renderMonthly() {
 function renderTable(list, title) {
   var html = '<div class="panel">';
   html += '<div class="panel-head"><h3>' + title + ' (' + list.length + ')</h3></div>';
-  html += '<div class="filter-row"><input type="text" placeholder="חיפוש לפי שם אירוע, ארגון, מ. זיהוי..." oninput="filterTable(this.value)" id="searchInput">';
+  html += '<div class="filter-row"><input type="text" placeholder="חיפוש לפי שם אירוע, ארגון, שלוחה..." oninput="filterTable(this.value)" id="searchInput">';
   html += '<select onchange="filterByLevel(this.value)" id="levelFilter"><option value="">כל הרמות</option><option value="low">נמוכה</option><option value="mid">בינונית</option><option value="high">גבוהה</option></select>';
   html += '<select onchange="filterByStatus(this.value)" id="statusFilter"><option value="">כל הסטטוסים</option><option value="draft">טיוטה</option><option value="new">חדש</option><option value="reviewed">נבדק</option><option value="approved">אושר</option><option value="pending">ממתין</option><option value="rejected">נדחה</option></select>';
   html += '</div>';
@@ -546,7 +546,7 @@ function buildTableHTML(list) {
   if (!list.length) return '<div class="empty"><div class="icon">📭</div><h3>אין הגשות</h3><p>טפסים שיוגשו יופיעו כאן</p></div>';
   var html = '<div class="tbl-wrap"><table><thead><tr>';
   html += '<th class="chk-col"><input type="checkbox" onclick="toggleSelectAll(this)" title="בחר הכל"></th>';
-  html += '<th>מ.ז. ממלא / הולך</th><th>סוג</th><th>בחסות / שם</th><th>אירוע / אדם</th><th>תאריך אירוע</th><th>הוגש ב</th><th>ציון</th><th>רמה</th><th>סטטוס / אבטחה</th><th>פעולות</th></tr></thead><tbody>';
+  html += '<th>שלוחה ממלא / הולך</th><th>סוג</th><th>בחסות / שם</th><th>אירוע / אדם</th><th>תאריך אירוע</th><th>הוגש ב</th><th>ציון</th><th>רמה</th><th>סטטוס / אבטחה</th><th>פעולות</th></tr></thead><tbody>';
   list.forEach(function(s) {
     var key = keyOf(s);
     var sc = s.manualScore || s.score || 0;
@@ -688,7 +688,7 @@ function openDetail(key) {
 
   if (isMeeting(s)) {
     html += '<div class="ds-title">פרטי הפגישה</div>';
-    html += dtRow('מספר זיהוי אישי', s.personalid);
+    html += dtRow('מספר שלוחה (ממלא)', s.personalid);
     html += dtRow('שם האדם', s.meetPersonName);
     html += dtRow('תפקיד האדם', s.meetPersonRole);
     html += dtRow('תאריך הפגישה', (s.meetDate || '—') + (s.meetTime ? ' בשעה ' + s.meetTime : ''));
@@ -705,7 +705,7 @@ function openDetail(key) {
   } else {
     html += '<div class="ds-title">פרטי ארגון ואיש קשר</div>';
     html += dtRow('בחסות', s.org);
-    html += dtRow('מספר זיהוי אישי', s.personalid);
+    html += dtRow('מספר שלוחה (ממלא)', s.personalid);
     html += dtRow('מארגן ידוע ומוכר', s.orgknown);
     if (s.orgknown_detail) html += dtRow('פירוט מארגן', s.orgknown_detail);
     html += dtRow('איש קשר', (s.fname || '') + ' ' + (s.lname || ''));
@@ -778,10 +778,10 @@ function openDetail(key) {
     html += '<option value="' + escapeHtml(ct) + '"' + (s.coverageType === ct ? ' selected' : '') + '>' + escapeHtml(ct) + '</option>';
   });
   html += '</select>';
-  html += '<label>מספר זיהוי ממלא</label>';
+  html += '<label>מספר שלוחה של מי שממלא</label>';
   html += '<input class="sel-status" id="mFillerId" value="' + escapeHtml(s.personalid || '') + '" readonly style="background:#f1f5f9;color:var(--muted)">';
-  html += '<label>מספר זיהוי של מי שהולך</label>';
-  html += '<input class="sel-status" id="mGoerId" value="' + escapeHtml(s.goerId || '') + '" placeholder="מ. זיהוי של מי שיוצא לאירוע">';
+  html += '<label>מספר שלוחה של מי שהולך</label>';
+  html += '<input class="sel-status" id="mGoerId" value="' + escapeHtml(s.goerId || '') + '" placeholder="מספר שלוחה של מי שיוצא לאירוע">';
   html += '<label>הערות פנימיות</label>';
   html += '<textarea class="notes-area" id="mNotes" placeholder="הוסף הערות פנימיות...">' + escapeHtml(s.notes || '') + '</textarea>';
   html += '</div>';
@@ -1057,7 +1057,7 @@ function exportWeeklyWord(offset) {
     items.sort(function(a, b) { return (a.time || '').localeCompare(b.time || ''); });
     html += '<div class="day-block">';
     html += '<h2>יום ' + dayNames[d.getDay()] + ' — ' + dmy(d) + '</h2>';
-    html += '<table><thead><tr><th style="width:10%">שעה</th><th style="width:18%">מיקום</th><th style="width:27%">תיאור</th><th style="width:25%">הערות</th><th style="width:20%">מ.ז. ממלא / הולך</th></tr></thead><tbody>';
+    html += '<table><thead><tr><th style="width:10%">שעה</th><th style="width:18%">מיקום</th><th style="width:27%">תיאור</th><th style="width:25%">הערות</th><th style="width:20%">שלוחה ממלא / הולך</th></tr></thead><tbody>';
     if (!items.length) {
       html += '<tr><td colspan="5" class="empty">אין אירועים או פגישות ליום זה</td></tr>';
     } else {
