@@ -551,7 +551,7 @@ function renderDashboard() {
   if (!recent.length) {
     html += '<div style="padding:1rem;font-size:12px;color:var(--muted)">אין הגשות עדיין</div>';
   } else {
-    html += '<table><thead><tr><th>אירוע / פגישה</th><th>הוגש</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
+    html += '<table><thead><tr><th>אירוע / פגישה</th><th>תאריך</th><th>ציון</th><th>סטטוס</th></tr></thead><tbody>';
     recent.forEach(function(s) {
       var sc = s.manualScore || s.score || 0;
       var li = levelInfo(sc);
@@ -560,7 +560,8 @@ function renderDashboard() {
       var rName = isMeeting(s) ? ('🤝 ' + (s.meetPersonName || 'פגישה')) : (isPackage(s) ? ('📦 ' + (s.pkgRecipient || 'חבילה')) : ('📅 ' + (s.evname || '—')));
       html += '<tr>';
       html += '<td style="font-weight:500">' + rName + '</td>';
-      html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
+      var evDate = eventDateOf(s), evTime = eventTimeOf(s);
+      html += '<td style="font-weight:700;color:var(--navy2);white-space:nowrap">' + (evDate ? escapeHtml(evDate + (evTime ? ' ' + evTime : '')) : '—') + '</td>';
       html += '<td><span class="' + li.scls + '" style="font-weight:700">' + sc + '</span></td>';
       html += '<td><span class="status-badge s-' + st + '">' + statusLabel(st) + '</span></td>';
       html += '</tr>';
@@ -672,7 +673,7 @@ function buildTableHTML(list) {
   if (!list.length) return '<div class="empty"><div class="icon">📭</div><h3>אין הגשות</h3><p>טפסים שיוגשו יופיעו כאן</p></div>';
   var html = '<div class="tbl-wrap"><table><thead><tr>';
   html += '<th class="chk-col"><input type="checkbox" onclick="toggleSelectAll(this)" title="בחר הכל"></th>';
-  html += '<th>שלוחה ממלא / הולך</th><th>סוג</th><th>בחסות / שם</th><th>אירוע / אדם</th><th>תאריך אירוע</th><th>הוגש ב</th><th>ציון</th><th>רמה</th><th>סטטוס / אבטחה</th><th>פעולות</th></tr></thead><tbody>';
+  html += '<th>שלוחה ממלא / הולך</th><th>סוג</th><th>בחסות / שם</th><th>אירוע / אדם</th><th>תאריך אירוע</th><th>ציון</th><th>רמה</th><th>סטטוס / אבטחה</th><th>פעולות</th></tr></thead><tbody>';
   list.forEach(function(s) {
     var key = keyOf(s);
     var sc = s.manualScore || s.score || 0;
@@ -697,8 +698,7 @@ function buildTableHTML(list) {
     html += '<td>' + typeBadge + '</td>';
     html += '<td>' + nameCol + '</td>';
     html += '<td style="font-weight:500">' + titleCol + '</td>';
-    html += '<td style="color:var(--muted)">' + dateCol + '</td>';
-    html += '<td><div class="submit-time"><span class="st-date">' + dt.date + '</span><span class="st-time">' + dt.time + '</span></div></td>';
+    html += '<td style="font-weight:700;color:var(--navy2);white-space:nowrap">' + escapeHtml(dateCol) + '</td>';
     html += '<td>' + (pkg ? '—' : '<span class="score-num ' + li.scls + '">' + sc + '</span>') + '</td>';
     html += '<td>' + (pkg ? '—' : '<span class="badge ' + li.cls + '">' + li.label + '</span>') + '</td>';
     var covCell = (!pkg && s.coverageType) ? '<div style="margin-top:3px">' + coverageBadge(s.coverageType) + '</div>' : '';
