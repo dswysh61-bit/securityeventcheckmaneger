@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://security-event-check-default-rtdb.europe-west1.firebasedatabase.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <title>מערכת נועה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -133,7 +135,7 @@ html.locked #loginOverlay{display:flex}
 .logout-btn:hover{color:var(--red);border-color:var(--red)}
 </style>
 <script>
-  (function(){try{if(sessionStorage.getItem('kabatAuth')!=='ok')document.documentElement.classList.add('locked');}catch(e){document.documentElement.classList.add('locked');}})();
+  (function(){try{if(!sessionStorage.getItem('fbRefresh'))document.documentElement.classList.add('locked');}catch(e){document.documentElement.classList.add('locked');}})();
 </script>
 </head>
 <body>
@@ -143,46 +145,102 @@ html.locked #loginOverlay{display:flex}
     <div class="lock">🔒</div>
     <h2>מערכת נועה</h2>
     <p>יש להתחבר כדי להמשיך</p>
-    <label for="loginUser">שם משתמש</label>
-    <input id="loginUser" name="username" type="text" autocomplete="username" required>
+    <label for="loginUser">מייל</label>
+    <input id="loginUser" name="email" type="email" autocomplete="username" required>
     <label for="loginPass">סיסמא</label>
     <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
-    <button type="submit">כניסה</button>
+    <button type="submit" id="loginBtn">כניסה</button>
     <div class="login-err" id="loginErr"></div>
   </form>
 </div>
 <button class="logout-btn" id="logoutBtn" type="button">יציאה ⎋</button>
 
 <script>
-(function(){
-  var AUTH_HASH = 'ad97e633c884f2dd95a57c4a40ceb1bd72a7e3fbc327939e31a5a05278abecad';
-  function sha256(str){
-    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(buf){
-      return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-    });
+/* ===== Firebase Authentication (REST) ===== */
+var FIREBASE_API_KEY = 'AIzaSyC2xGXHhzYNMQ3jupdfQqKAqgSs570Waec'; // ← ה-apiKey מתוך Firebase config
+var FBAuth = (function(){
+  var idToken = null, expiresAt = 0, refreshing = null;
+  function save(d){
+    idToken = d.idToken || d.id_token;
+    expiresAt = Date.now() + (parseInt(d.expiresIn || d.expires_in, 10) - 120) * 1000;
+    try { sessionStorage.setItem('fbRefresh', d.refreshToken || d.refresh_token); } catch(e){}
   }
+  function signIn(email, password){
+    return fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + FIREBASE_API_KEY, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email, password: password, returnSecureToken: true })
+    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error((d.error && d.error.message) || 'LOGIN_FAILED'); save(d); }); });
+  }
+  function refresh(){
+    var rt = null; try { rt = sessionStorage.getItem('fbRefresh'); } catch(e){}
+    if (!rt) return Promise.reject(new Error('NO_SESSION'));
+    if (!refreshing) {
+      refreshing = fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
+        method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt)
+      }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error('SESSION_EXPIRED'); save(d); }); })
+        .finally(function(){ refreshing = null; });
+    }
+    return refreshing;
+  }
+  function getToken(){
+    if (idToken && Date.now() < expiresAt) return Promise.resolve(idToken);
+    return refresh().then(function(){ return idToken; });
+  }
+  function logout(){
+    idToken = null; expiresAt = 0;
+    try { sessionStorage.removeItem('fbRefresh'); } catch(e){}
+    location.reload();
+  }
+  return { signIn: signIn, refresh: refresh, getToken: getToken, logout: logout };
+})();
+
+/* כל פנייה ל-Firebase עוברת כאן, עם טוקן הזדהות */
+function fbFetch(path, opts){
+  return FBAuth.getToken().then(function(t){
+    return fetch(FIREBASE_URL + path + '?auth=' + encodeURIComponent(t), opts);
+  }).then(function(res){
+    if (res.status === 401) { FBAuth.logout(); throw new Error('נדרשת התחברות מחדש'); }
+    return res;
+  });
+}
+
+(function(){
+  var started = false;
+  function unlock(){
+    document.documentElement.classList.remove('locked');
+    if (!started && typeof startDashboard === 'function') { started = true; startDashboard(); }
+  }
+  var MSG = {
+    INVALID_LOGIN_CREDENTIALS: 'מייל או סיסמא שגויים',
+    INVALID_PASSWORD: 'מייל או סיסמא שגויים',
+    EMAIL_NOT_FOUND: 'מייל או סיסמא שגויים',
+    INVALID_EMAIL: 'כתובת מייל לא תקינה',
+    USER_DISABLED: 'המשתמש חסום',
+    TOO_MANY_ATTEMPTS_TRY_LATER: 'יותר מדי ניסיונות. נסה שוב בעוד כמה דקות'
+  };
   document.getElementById('loginForm').addEventListener('submit', function(e){
     e.preventDefault();
     var u = document.getElementById('loginUser').value.trim();
-    var p = document.getElementById('loginPass').value;
-    sha256(u + ':' + p).then(function(h){
-      if (h === AUTH_HASH) {
-        try { sessionStorage.setItem('kabatAuth','ok'); } catch(err){}
-        document.documentElement.classList.remove('locked');
-        document.getElementById('loginPass').value = '';
-        document.getElementById('loginErr').textContent = '';
-      } else {
-        document.getElementById('loginErr').textContent = 'שם משתמש או סיסמא שגויים';
-        document.getElementById('loginPass').value = '';
-        document.getElementById('loginPass').focus();
-      }
+    var pw = document.getElementById('loginPass');
+    var btn = document.getElementById('loginBtn'), err = document.getElementById('loginErr');
+    btn.disabled = true; btn.textContent = 'מתחבר...'; err.textContent = '';
+    FBAuth.signIn(u, pw.value).then(function(){
+      pw.value = ''; unlock();
+    }).catch(function(ex){
+      var code = String(ex.message || '').split(' ')[0].split(':')[0];
+      err.textContent = MSG[code] || ('שגיאת התחברות (' + code + ')');
+      pw.value = ''; pw.focus();
+    }).finally(function(){ btn.disabled = false; btn.textContent = 'כניסה'; });
+  });
+  document.getElementById('logoutBtn').addEventListener('click', FBAuth.logout);
+  window.addEventListener('DOMContentLoaded', function(){
+    if (document.documentElement.classList.contains('locked')) { document.getElementById('loginUser').focus(); return; }
+    FBAuth.refresh().then(unlock).catch(function(){
+      try { sessionStorage.removeItem('fbRefresh'); } catch(e){}
+      document.documentElement.classList.add('locked');
     });
   });
-  document.getElementById('logoutBtn').addEventListener('click', function(){
-    try { sessionStorage.removeItem('kabatAuth'); } catch(err){}
-    location.reload();
-  });
-  if (document.documentElement.classList.contains('locked')) document.getElementById('loginUser').focus();
 })();
 </script>
 
@@ -291,8 +349,8 @@ function initAdminChip() {
     '<div class="ai"><span class="an">' + escapeHtml(name) + '</span><span class="ar">🛡️ הרשאת ניהול</span></div>';
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  initAdminChip();
+window.addEventListener('DOMContentLoaded', initAdminChip);
+function startDashboard() {
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatus').textContent = 'Firebase לא מוגדר';
@@ -301,7 +359,7 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   loadFromFirebase();
   pollingTimer = setInterval(function() { loadFromFirebase(true); }, POLLING_INTERVAL);
-});
+}
 
 /* מזהה יציב לכל הגשה: מפתח ה-Firebase האמיתי, ובמצב מקומי – האסמכתא */
 function keyOf(s) { return s._fbKey || s.ref; }
@@ -327,7 +385,7 @@ function sortByEventDate(a, b) {
   return ea.localeCompare(eb);
 }
 function findByKey(key) { return allSubmissions.find(function(x) { return keyOf(x) === key; }); }
-function escapeHtml(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escapeHtml(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 function showToast(msg, color) {
   var toast = document.createElement('div');
   toast.textContent = msg;
@@ -339,7 +397,7 @@ function showToast(msg, color) {
 function loadFromFirebase(silent) {
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) { loadFromLocalStorage(); return; }
   if (!silent) document.getElementById('fbStatus').textContent = 'טוען...';
-  fetch(FIREBASE_URL + '/submissions.json')
+  fbFetch('/submissions.json')
     .then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
@@ -373,7 +431,7 @@ function loadFromFirebase(silent) {
 
 function updateInFirebase(key, updates) {
   if (!FIREBASE_URL || FIREBASE_URL.includes('YOUR-PROJECT')) { updateInLocalStorage(key, updates); return Promise.resolve(); }
-  return fetch(FIREBASE_URL + '/submissions/' + encodeURIComponent(key) + '.json', {
+  return fbFetch('/submissions/' + encodeURIComponent(key) + '.json', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -1164,7 +1222,7 @@ function deleteFromFirebase(key) {
     localStorage.setItem('securitySubmissions', JSON.stringify(raw));
     return Promise.resolve();
   }
-  return fetch(FIREBASE_URL + '/submissions/' + encodeURIComponent(key) + '.json', { method: 'DELETE' })
+  return fbFetch('/submissions/' + encodeURIComponent(key) + '.json', { method: 'DELETE' })
     .then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
@@ -1204,7 +1262,7 @@ function confirmDeleteAll() {
     showView(currentView);
     return;
   }
-  fetch(FIREBASE_URL + '/submissions.json', { method: 'DELETE' })
+  fbFetch('/submissions.json', { method: 'DELETE' })
     .then(function() { allSubmissions = []; selectedKeys = {}; showView(currentView); })
     .catch(function(err) { alert('שגיאה: ' + err.message); });
 }
